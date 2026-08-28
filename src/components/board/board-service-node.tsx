@@ -71,7 +71,9 @@ export function BoardServiceNode(props: NodeProps) {
         // changes outline-color — the one outline property that transitions
         // smoothly. Outline, not ring: ring is box-shadow, and a shared
         // box-shadow transition would tangle selection with the hover shadow.
-        "min-w-44 rounded-xl border-2 bg-surface px-3 py-2.5 shadow-md shadow-black/20 outline-2 outline-offset-2 outline-transparent transition-[box-shadow,border-color,background-color,outline-color] duration-200",
+        // max-w keeps a long note wrapping instead of stretching the card, so
+        // card geometry stays predictable for layout and edge routing.
+        "min-w-44 max-w-60 rounded-xl border-2 bg-surface px-3 py-2.5 shadow-md shadow-black/20 outline-2 outline-offset-2 outline-transparent transition-[box-shadow,border-color,background-color,outline-color] duration-200",
         "hover:bg-surface-raised hover:shadow-lg hover:shadow-black/25",
         kind.border,
         props.selected && kind.outline,

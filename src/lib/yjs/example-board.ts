@@ -14,47 +14,52 @@ interface ExampleNode {
  * A small checkout system, laid out left to right. Every service kind appears
  * once, three edge kinds appear, and each note teaches one canvas gesture.
  */
+/**
+ * A card is at most 240 px wide (max-w-60) and about 130 px tall with a
+ * two-line note. Columns sit 340 px apart and rows 220 px apart, so every
+ * card keeps at least a 100 px margin from its neighbours.
+ */
 const EXAMPLE_NODES: ExampleNode[] = [
   {
     key: "gateway",
     label: "edge-gateway",
     kind: "gateway",
-    position: { x: -440, y: -40 },
+    position: { x: -680, y: 0 },
     note: "Every request enters here. Right-click me for edit and delete.",
   },
   {
     key: "web",
     label: "web-app",
     kind: "service",
-    position: { x: -180, y: -40 },
+    position: { x: -340, y: 0 },
     note: "Drag me around. My edges follow my closest side.",
   },
   {
     key: "api",
     label: "api",
     kind: "service",
-    position: { x: 80, y: -40 },
+    position: { x: 0, y: 0 },
     note: "Double-click me to open the editor and change this note.",
   },
   {
     key: "db",
     label: "postgres",
     kind: "datastore",
-    position: { x: 340, y: -150 },
+    position: { x: 340, y: -110 },
     note: "Drag from one of my four round handles to draw a new edge.",
   },
   {
     key: "queue",
     label: "jobs",
     kind: "queue",
-    position: { x: 340, y: 70 },
+    position: { x: 340, y: 110 },
     note: "The moving edge means that api publishes events to me.",
   },
   {
     key: "billing",
     label: "stripe",
     kind: "external",
-    position: { x: 80, y: 170 },
+    position: { x: 0, y: 240 },
     note: "Click me, then press Backspace to delete me. I am safe to lose.",
   },
 ]

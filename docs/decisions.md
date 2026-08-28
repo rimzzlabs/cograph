@@ -154,6 +154,31 @@ The house scaffold never runs `git init`. The repository was initialised separat
 
 ---
 
+## 011 — Propose a stable presence identity for each browser profile
+
+**Date:** 2026-08-28
+
+The current code makes a new identity on each page load. It also names every person "You". We wrote
+RFC #1 to fix this.
+
+The proposal keeps the identity in `localStorage`. That store is scoped to one browser profile. Two
+tabs therefore show one person. An incognito window or a second browser shows a different person.
+The read step groups the awareness states by participant id, because each tab opens its own
+connection.
+
+The user sets a display name. A hash of the name gives a hue. The lightness and the chroma stay
+fixed, so every colour is legible on the dark canvas. When two participants share a name, only the
+colour of the peer moves.
+
+Status: proposed, not implemented. Five open questions remain in the issue.
+
+**Consequence for the demo:** two tabs in one browser will show one person. The video must use an
+incognito window or a second browser to show multiplayer use.
+
+See: https://github.com/rimzzlabs/cograph/issues/1
+
+---
+
 ## Open risks
 
 - **WebMCP is unverified in a browser.** `src/lib/mcp/types.ts` declares `document.modelContext`

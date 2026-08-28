@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "rfc": {
+      "source": "rimzzlabs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/rfc/SKILL.md",
+      "computedHash": "42ec5ec0775a9afd0085235bcde2c355a301efd4ffcc763c37f31d63c764f0a2"
+    },
+    "rts": {
+      "source": "rimzzlabs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/rts/SKILL.md",
+      "computedHash": "43f4195786546e4d9ee757cc077272231d5a3b5993ddc16a3b70f8ee9e05570e"
+    },
+    "ste": {
+      "source": "rimzzlabs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ste/SKILL.md",
+      "computedHash": "ca630c228f00312e0759651f193a63f8c1230b46b655351c06e1d20f6a723ab8"
+    },
+    "work-on": {
+      "source": "rimzzlabs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/work-on/SKILL.md",
+      "computedHash": "ca3f7e318422d17c38a1d2c9f452d9a5460c302c347f26a77a3a7bcf16b65aa0"
+    }
+  }
+}

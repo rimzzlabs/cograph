@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+@theme {
+  --color-canvas: oklch(0.18 0.012 264);
+  --color-surface: oklch(0.22 0.014 264);
+  --color-surface-raised: oklch(0.26 0.016 264);
+  --color-line: oklch(0.32 0.018 264);
+  --color-ink: oklch(0.95 0.006 264);
+  --color-ink-muted: oklch(0.72 0.014 264);
+
+  --color-human: oklch(0.72 0.15 240);
+  --color-agent: oklch(0.78 0.16 155);
+  --color-danger: oklch(0.68 0.19 25);
+  --color-warn: oklch(0.8 0.15 75);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  overscroll-behavior: none;
+}
+
+.react-flow {
+  --xy-background-color: var(--color-canvas);
+  --xy-edge-stroke: var(--color-line);
+  --xy-edge-stroke-selected: var(--color-human);
+}

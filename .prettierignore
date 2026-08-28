@@ -1,0 +1,10 @@
+# Prettier handles Markdown and YAML only. The format script scopes the globs;
+# Biome owns every other format.
+node_modules
+dist
+.wrangler
+pnpm-lock.yaml
+CHANGELOG.md
+
+# Vendored skills are pinned by hash in skills-lock.json.
+.agents

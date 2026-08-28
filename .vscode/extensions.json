@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "cloudflare.vscode-cloudflare-workers"
+  ]
+}

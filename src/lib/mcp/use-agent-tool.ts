@@ -1,0 +1,111 @@
+import { useEffect, useRef } from "react"
+import { useToolRegistryStore } from "@/stores/tool-registry-store"
+import {
+  errorResult,
+  getModelContext,
+  type JsonSchema,
+  type ToolAnnotations,
+  type ToolExecuteOptions,
+  type ToolResult,
+} from "./types"
+
+export interface AgentToolSpec {
+  name: string
+  description: string
+  inputSchema: JsonSchema
+  annotations?: ToolAnnotations
+  /** Secure origins allowed to discover this tool across a document boundary. */
+  exposedTo?: string[]
+  execute: (
+    args: Record<string, unknown>,
+    options: ToolExecuteOptions,
+  ) => ToolResult | Promise<ToolResult>
+}
+
+/**
+ * Registers one WebMCP tool for as long as `spec` is non-null, and unregisters it
+ * through an AbortSignal the moment it turns null or its declaration changes.
+ *
+ * Passing null is the point: a tool that cannot be used in the current state
+ * should not exist for the agent, rather than exist and return an error.
+ *
+ * The registration effect is keyed on the declarative half of the spec only.
+ * `execute` is read through a ref, so a new closure on every render does not
+ * churn the agent's tool list.
+ */
+export function useAgentTool(spec: AgentToolSpec | null) {
+  const specRef = useRef(spec)
+  specRef.current = spec
+
+  const addTool = useToolRegistryStore((state) => state.addTool)
+  const removeTool = useToolRegistryStore((state) => state.removeTool)
+  const recordCall = useToolRegistryStore((state) => state.recordCall)
+
+  const signature = spec
+    ? JSON.stringify({
+        name: spec.name,
+        description: spec.description,
+        inputSchema: spec.inputSchema,
+        annotations: spec.annotations,
+        exposedTo: spec.exposedTo,
+      })
+    : null
+
+  // Synchronising with the browser's model context — an external system, which
+  // is the one case rule 16 leaves for useEffect.
+  useEffect(() => {
+    if (!signature) return
+
+    const modelContext = getModelContext()
+    if (!modelContext) return
+
+    const declaration = JSON.parse(signature) as Pick<
+      AgentToolSpec,
+      "name" | "description" | "inputSchema" | "annotations" | "exposedTo"
+    >
+    const controller = new AbortController()
+
+    void modelContext
+      .registerTool(
+        {
+          name: declaration.name,
+          description: declaration.description,
+          inputSchema: declaration.inputSchema,
+          annotations: declaration.annotations,
+          execute: async (args, options) => {
+            const current = specRef.current
+            if (!current) return errorResult("This tool is no longer available.")
+
+            const result = await current.execute(args, options)
+            recordCall({
+              id: crypto.randomUUID(),
+              toolName: declaration.name,
+              args,
+              outcome: result.isError ? "error" : "ok",
+              summary: result.content.map((part) => part.text).join(" "),
+              at: Date.now(),
+            })
+            return result
+          },
+        },
+        { signal: controller.signal, exposedTo: declaration.exposedTo },
+      )
+      .then(() => {
+        addTool({
+          name: declaration.name,
+          description: declaration.description,
+          annotations: declaration.annotations,
+          registeredAt: Date.now(),
+        })
+      })
+      .catch(() => {
+        // Registration is gated by the `tools` Permissions Policy. A refusal is a
+        // normal state for this page, not a crash: the board still works by hand.
+      })
+
+    return () => {
+      controller.abort()
+      removeTool(declaration.name)
+    }
+  }, [signature, addTool, removeTool, recordCall])
+}

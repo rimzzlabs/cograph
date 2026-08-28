@@ -7,6 +7,7 @@ interface AddNodeParams {
   kind: ServiceKind
   authorId: string
   position: { x: number; y: number }
+  note?: string
 }
 
 export function addNode(params: AddNodeParams) {
@@ -14,7 +15,12 @@ export function addNode(params: AddNodeParams) {
   const node: GraphNode = {
     id,
     position: params.position,
-    data: { label: params.label, kind: params.kind, note: "", authorId: params.authorId },
+    data: {
+      label: params.label,
+      kind: params.kind,
+      note: params.note ?? "",
+      authorId: params.authorId,
+    },
   }
 
   params.board.doc.transact(() => {

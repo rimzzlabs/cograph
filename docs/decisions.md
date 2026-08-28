@@ -181,12 +181,34 @@ All five open questions are answered:
 Answer 3 costs stability. A guaranteed hue distance and a colour that never moves cannot both hold.
 The hue of a peer can move when another participant joins. The colour of the local user never moves.
 
-Status: agreed, not implemented.
+Status: implemented. See entry 012 for a correction to the colour rule.
 
 **Consequence for the demo:** two tabs in one browser will show one person. The video must use an
 incognito window or a second browser to show multiplayer use.
 
 See: https://github.com/rimzzlabs/cograph/issues/1
+
+---
+
+## 012 — Anchor the hue grid on the local user
+
+**Date:** 2026-08-28
+
+We implemented RFC #1. One part of the agreed design was wrong, and we corrected it.
+
+The RFC said that each peer starts at the hue of its name, and then steps by 30 degrees until it
+clears the placed hues. That rule does not give the guarantee. Each participant steps on its own
+grid, so twelve arbitrary start hues can still land closer than 30 degrees. A check with 12
+participants produced a closest pair of 21 degrees.
+
+The fix is one shared grid. The local user takes the exact hue of the local name. That hue anchors
+12 slots, spaced 30 degrees apart. Each peer takes the slot nearest the hue of its name, and probes
+forward when the slot is taken. A check with 12 participants now produces exactly 30 degrees.
+
+The local user still keeps the exact hue of their own name, so the original rule holds.
+
+`scripts/color-check.ts` holds the check. Run it with `pnpm test:color`. It covers the collision
+rule, the spacing guarantee, the order independence, and the behaviour above 12 participants.
 
 ---
 

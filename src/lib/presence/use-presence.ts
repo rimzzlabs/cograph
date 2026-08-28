@@ -16,6 +16,11 @@ interface UsePresenceParams {
 
 /**
  * Publishes the local participant into Yjs awareness and reports everyone else.
+ *
+ * One identity can hold several awareness entries, because every tab opens its
+ * own connection. States are therefore grouped by participant id and collapsed
+ * to the most recently updated one, so a person in two tabs appears once.
+ *
  * An agent acting through the tool surface is published the same way a person
  * is, so it shows up in the participant list with its own identity.
  */
@@ -31,19 +36,38 @@ export function usePresence(params: UsePresenceParams) {
     awareness.setLocalStateField("selection", selection)
 
     function readOthers() {
-      const states: PresenceState[] = []
+      const newest = new Map<string, { state: PresenceState; lastUpdated: number }>()
+
       for (const [clientId, state] of awareness.getStates()) {
         if (clientId === awareness.clientID) continue
+
         const value = state as Partial<PresenceState>
-        if (value.participant) {
-          states.push({
-            participant: value.participant,
+        const participant = value.participant
+        if (!participant) continue
+
+        // Another tab of this same person, not a peer.
+        if (participant.id === me.id) continue
+
+        const lastUpdated = awareness.meta.get(clientId)?.lastUpdated ?? 0
+        const existing = newest.get(participant.id)
+        if (existing && existing.lastUpdated >= lastUpdated) continue
+
+        newest.set(participant.id, {
+          lastUpdated,
+          state: {
+            participant,
             selection: value.selection ?? [],
             cursor: value.cursor ?? null,
-          })
-        }
+          },
+        })
       }
-      setOthers(states)
+
+      const collapsed = Array.from(newest.values(), (entry) => entry.state)
+      setOthers(
+        collapsed.toSorted((first, second) =>
+          first.participant.id.localeCompare(second.participant.id),
+        ),
+      )
     }
 
     readOthers()

@@ -69,6 +69,7 @@ enabled, or open the app in the ChatGPT in-app browser.
 | `pnpm build`      | Type-check and build                |
 | `pnpm deploy`     | Build and deploy to Cloudflare      |
 | `pnpm typecheck`  | Type-check only                     |
+| `pnpm test:color` | Check the participant colour rules  |
 | `pnpm lint`       | Biome check                         |
 | `pnpm lint:fix`   | Biome check and write fixes         |
 | `pnpm format`     | Prettier on Markdown and YAML       |

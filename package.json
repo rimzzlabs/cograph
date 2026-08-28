@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "deploy": "pnpm build && wrangler deploy",
     "typecheck": "tsc -b --noEmit",
+    "test:color": "node scripts/color-check.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "prettier --write \"**/*.{md,yml,yaml}\"",

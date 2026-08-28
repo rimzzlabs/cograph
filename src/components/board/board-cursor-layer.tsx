@@ -31,7 +31,7 @@ export function BoardCursorLayer(props: BoardCursorLayerProps) {
             <path
               d="M1 1 L15 6.5 L8.5 8.5 L6.5 15 Z"
               fill={marker.color}
-              stroke="oklch(0.18 0.012 264)"
+              stroke="var(--color-canvas)"
               strokeWidth="1"
             />
           </svg>

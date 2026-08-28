@@ -330,6 +330,108 @@ own the clock).
 
 ---
 
+## 017 — Recolour the theme: calm warm neutrals, no blue
+
+**Date:** 2026-08-29
+
+The user rejected the blue accent and the gradient buttons. The direction is now calm and smooth.
+
+The neutrals move from cold blue-grey (hue 264) to warm stone (hue ~80), at lower chroma. The
+primary accent moves from blue (240) to sage green (150). The agent token moves to a calm lavender
+(300). The danger and warn tokens drop chroma, so alerts read clearly without shouting. The
+`ui-ux-pro-max` design search returned "mindful green + calm lavender" for this brief, and the
+palette follows it.
+
+The default and secondary buttons lose their white-and-black gradient overlays and inner highlight.
+They are now flat, with a soft shadow and a 200 ms ease-out hover. The base radius grows from
+0.625rem to 0.75rem. Node cards get the larger radius and a softer shadow.
+
+The participant identity colours do not change. Their lightness and chroma stay at 0.74 and 0.15,
+because hue spacing carries identity and `pnpm test:color` covers the rules. Two hardcoded blues
+outside the token file are corrected: the cursor outline now reads `var(--color-canvas)`, and the
+participant-list fallback hue moves to 150.
+
+**Rejected:** a light theme (the product is a dark canvas, decision 015 stands); new display fonts
+(decision 015 keeps the system stack, and calm comes from colour and motion here).
+
+---
+
+## 018 — Lavender primary, and a node card that shows its kind
+
+**Date:** 2026-08-29
+
+The user rejected the sage primary from entry 017. The primary accent is now a calm lavender
+(oklch 0.75 0.11 300). The design database returned "calm lavender" for the same calm brief, so the
+palette keeps a verified source. The sage hue moves to the agent token, which colours datastore
+nodes and chart-2. The warm stone neutrals from entry 017 stay.
+
+The node card is rebuilt. Each service kind now has a lucide icon in a small tinted chip: Box,
+Database, Layers, Globe, and Network. The icon sits beside the visible label, so it carries
+`aria-hidden`. The kind caption is capitalised, and the label truncates instead of wrapping.
+
+The handles were 6 px dots in a near-surface colour, and users could not find them. They are now
+12 px circles with a 2 px canvas-colour border, so they read as sockets on the card edge. They tint
+to the primary on hover.
+
+The selection ring was a flat 2 px outline against the border. It now uses a 2 px ring with a 2 px
+canvas-colour offset, so a selected card shows a clear halo that no border colour can hide.
+
+**Rejected:** Phosphor icons (the icon search suggested them, but the repository already ships
+lucide-react through shadcn); kind-coloured handles (two colour systems on one card edge reads
+noisy, and the calm brief wins).
+
+---
+
+## 019 — Four handles, floating edges, and controlled selection
+
+**Date:** 2026-08-29
+
+Manual testing showed three faults. An edge stayed glued to its stored side, so a moved node
+dragged its edge across its own card. A node gave no hover feedback. And a click on the pane did
+not clear the selection.
+
+Each node now has one handle per side. Every handle is type "source", and the canvas runs with
+`ConnectionMode.Loose`, so a drag between any two handles connects. The stored edge keeps only its
+source and target ids.
+
+The rendered edge no longer uses the stored handle at all. `BoardFloatingEdge` reads the live
+positions of both nodes and connects the two closest sides. The dominant axis picks the side pair.
+The edge therefore realigns during the drag, not only after release.
+
+Selection is now controlled from the session store, the same way Yjs owns the graph. The nodes and
+edges given to React Flow carry a `selected` flag computed from the store, and `onPaneClick` clears
+the store. Before this, React Flow kept selection in its internal state only, and a pane click
+could not clear what the store held. The node card also gets a hover state: a raised surface and a
+deeper shadow.
+
+**Rejected:** storing the chosen handle per edge and rewriting it on drag release (write traffic
+for a render concern, and the CRDT would sync cosmetic churn); separate source and target handles
+per side (eight handles per card reads noisy, and Loose mode makes them redundant).
+
+---
+
+## 020 — Apply select changes in the same tick
+
+**Date:** 2026-08-29
+
+Entry 019 made selection controlled, and a click then showed its ring late. The ring waited for
+the next unrelated re-render, such as a cursor publish or a snapshot arrival.
+
+The cause sits in React Flow's controlled mode. A click mutates the internal node lookup silently
+and emits a `select` change through `onNodesChange`. React Flow does not apply the change itself.
+Our handler only processed `position` and `remove`, so no React state changed at click time. The
+`onSelectionChange` effect only fired when a later update recomputed its selector.
+
+`onNodesChange` and `onEdgesChange` now fold `select` changes into the session store in the same
+tick. The ring, the store, and the agent tool surface update with the click. `onSelectionChange`
+stays as a safety net for any other selection path.
+
+One more latency hid in CSS. The ring utility is a box-shadow, and the card animates box-shadow
+over 200 ms for hover. The selected state now uses an outline, which is not in the transition
+list, so it lands instantly.
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

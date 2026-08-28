@@ -1,10 +1,10 @@
 import {
   Background,
   type Connection,
+  ConnectionMode,
   Controls,
   type Edge,
   type EdgeChange,
-  MiniMap,
   type Node,
   type NodeChange,
   type OnSelectionChangeParams,
@@ -28,10 +28,12 @@ import {
 import { canEdit, useSessionStore } from "@/stores/session-store"
 import { BoardContextMenu, type ContextMenuState } from "./board-context-menu"
 import { BoardCursorLayer, type CursorMarker } from "./board-cursor-layer"
+import { BoardFloatingEdge } from "./board-floating-edge"
 import { BoardNodeDialog, type NodeDialogResult } from "./board-node-dialog"
 import { BoardServiceNode } from "./board-service-node"
 
 const NODE_TYPES = { service: BoardServiceNode }
+const EDGE_TYPES = { floating: BoardFloatingEdge }
 
 interface BoardCanvasProps {
   board: BoardConnection
@@ -59,6 +61,8 @@ function BoardCanvasInner(props: BoardCanvasProps) {
 
   const me = useSessionStore((state) => state.me)
   const highlightedNodeIds = useSessionStore((state) => state.highlightedNodeIds)
+  const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
+  const selectedEdgeIds = useSessionStore((state) => state.selectedEdgeIds)
   const setSelection = useSessionStore((state) => state.setSelection)
   const { screenToFlowPosition } = useReactFlow()
   const cursorFrame = useRef<number | null>(null)
@@ -72,50 +76,90 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     [snapshot.nodes, editingNodeId],
   )
 
+  // Selection is controlled from the session store, the same way Yjs owns the
+  // graph. React Flow reports selection intents and this feeds them back, so a
+  // pane click clears the ring, the store, and the agent tool surface together.
   const nodes = useMemo<Node[]>(
     () =>
       snapshot.nodes.map((node) => ({
         id: node.id,
         type: "service",
         position: node.position,
-        data: { ...node.data, highlighted: highlightedNodeIds.includes(node.id) },
+        selected: selectedNodeIds.includes(node.id),
+        data: {
+          ...node.data,
+          highlighted: highlightedNodeIds.includes(node.id),
+        },
       })),
-    [snapshot.nodes, highlightedNodeIds],
+    [snapshot.nodes, highlightedNodeIds, selectedNodeIds],
   )
 
   const edges = useMemo<Edge[]>(
     () =>
       snapshot.edges.map((edge) => ({
         id: edge.id,
+        type: "floating",
         source: edge.source,
         target: edge.target,
         label: edge.kind,
+        selected: selectedEdgeIds.includes(edge.id),
         animated: edge.kind === "publishes",
       })),
-    [snapshot.edges],
+    [snapshot.edges, selectedEdgeIds],
   )
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
+      // In a controlled flow, React Flow only *reports* select changes — the app
+      // must apply them, in the same tick, or the ring waits for the next
+      // unrelated re-render to flush through.
+      let selection: string[] | null = null
+
       for (const change of changes) {
         if (change.type === "position" && change.position) {
-          updateNode({ board, id: change.id, patch: { position: change.position } })
+          updateNode({
+            board,
+            id: change.id,
+            patch: { position: change.position },
+          })
         }
         if (change.type === "remove" && editable) {
           removeNode(board, change.id)
         }
+        if (change.type === "select") {
+          selection ??= [...useSessionStore.getState().selectedNodeIds]
+          selection = change.selected
+            ? [...selection.filter((id) => id !== change.id), change.id]
+            : selection.filter((id) => id !== change.id)
+        }
+      }
+
+      if (selection) {
+        setSelection({ nodes: selection, edges: useSessionStore.getState().selectedEdgeIds })
       }
     },
-    [board, editable],
+    [board, editable, setSelection],
   )
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
+      let selection: string[] | null = null
+
       for (const change of changes) {
         if (change.type === "remove" && editable) removeEdge(board, change.id)
+        if (change.type === "select") {
+          selection ??= [...useSessionStore.getState().selectedEdgeIds]
+          selection = change.selected
+            ? [...selection.filter((id) => id !== change.id), change.id]
+            : selection.filter((id) => id !== change.id)
+        }
+      }
+
+      if (selection) {
+        setSelection({ nodes: useSessionStore.getState().selectedNodeIds, edges: selection })
       }
     },
-    [board, editable],
+    [board, editable, setSelection],
   )
 
   const onConnect = useCallback(
@@ -140,6 +184,10 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     },
     [setSelection],
   )
+
+  const onPaneClick = useCallback(() => {
+    setSelection({ nodes: [], edges: [] })
+  }, [setSelection])
 
   // Mouse moves fire far faster than awareness needs; one publish per frame.
   const onPointerMove = useCallback(
@@ -213,7 +261,12 @@ function BoardCanvasInner(props: BoardCanvasProps) {
       board,
       id: editingNode.id,
       patch: {
-        data: { label: result.label, kind: result.kind, note: result.note, authorId: me.id },
+        data: {
+          label: result.label,
+          kind: result.kind,
+          note: result.note,
+          authorId: me.id,
+        },
       },
     })
     setEditingNodeId(null)
@@ -225,10 +278,13 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         nodes={nodes}
         edges={edges}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
+        connectionMode={ConnectionMode.Loose}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        onPaneClick={onPaneClick}
         onPaneContextMenu={openPaneMenu}
         onNodeContextMenu={openNodeMenu}
         onEdgeContextMenu={openEdgeMenu}
@@ -237,11 +293,13 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         }}
         colorMode="dark"
         fitView
+        panOnDrag={[1, 2]}
+        panOnScroll
+        selectionOnDrag
         proOptions={{ hideAttribution: false }}
       >
         <Background />
         <Controls />
-        <MiniMap pannable zoomable />
         <BoardCursorLayer markers={cursors} />
         {editable ? (
           <Panel position="top-left">

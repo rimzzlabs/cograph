@@ -8,7 +8,7 @@ import type { PresenceState } from "@/lib/presence/use-presence"
 import { cn } from "@/lib/utils"
 import type { Participant } from "@/stores/session-store"
 
-const FALLBACK_COLOR = "oklch(0.74 0.15 240)"
+const FALLBACK_COLOR = "oklch(0.74 0.15 300)"
 
 /** Idle for longer than this counts as offline, and the ring goes away. */
 const ONLINE_WINDOW_MS = 60_000

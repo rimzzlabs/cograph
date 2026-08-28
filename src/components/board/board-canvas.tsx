@@ -8,11 +8,14 @@ import {
   type NodeChange,
   type OnSelectionChangeParams,
   ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
 } from "@xyflow/react"
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
 import { connectNodes, updateNode } from "@/lib/yjs/mutations"
 import { useSessionStore } from "@/stores/session-store"
+import { BoardCursorLayer, type CursorMarker } from "./board-cursor-layer"
 import { BoardServiceNode } from "./board-service-node"
 
 const NODE_TYPES = { service: BoardServiceNode }
@@ -20,6 +23,16 @@ const NODE_TYPES = { service: BoardServiceNode }
 interface BoardCanvasProps {
   board: BoardConnection
   snapshot: BoardSnapshot
+  cursors: CursorMarker[]
+  onCursorMove: (position: { x: number; y: number } | null) => void
+}
+
+export function BoardCanvas(props: BoardCanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <BoardCanvasInner {...props} />
+    </ReactFlowProvider>
+  )
 }
 
 /**
@@ -27,11 +40,13 @@ interface BoardCanvasProps {
  * interactions are written into the doc and arrive back through the snapshot,
  * so there is exactly one source of truth.
  */
-export function BoardCanvas(props: BoardCanvasProps) {
-  const { board, snapshot } = props
+function BoardCanvasInner(props: BoardCanvasProps) {
+  const { board, snapshot, cursors, onCursorMove } = props
 
   const highlightedNodeIds = useSessionStore((state) => state.highlightedNodeIds)
   const setSelection = useSessionStore((state) => state.setSelection)
+  const { screenToFlowPosition } = useReactFlow()
+  const cursorFrame = useRef<number | null>(null)
 
   const nodes = useMemo<Node[]>(
     () =>
@@ -89,21 +104,45 @@ export function BoardCanvas(props: BoardCanvasProps) {
     [setSelection],
   )
 
+  // Mouse moves fire far faster than awareness needs; one publish per frame.
+  const onPointerMove = useCallback(
+    (event: React.PointerEvent) => {
+      if (cursorFrame.current !== null) return
+      const { clientX, clientY } = event
+      cursorFrame.current = requestAnimationFrame(() => {
+        cursorFrame.current = null
+        onCursorMove(screenToFlowPosition({ x: clientX, y: clientY }))
+      })
+    },
+    [onCursorMove, screenToFlowPosition],
+  )
+
+  const onPointerLeave = useCallback(() => {
+    if (cursorFrame.current !== null) {
+      cancelAnimationFrame(cursorFrame.current)
+      cursorFrame.current = null
+    }
+    onCursorMove(null)
+  }, [onCursorMove])
+
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={NODE_TYPES}
-      onNodesChange={onNodesChange}
-      onConnect={onConnect}
-      onSelectionChange={onSelectionChange}
-      colorMode="dark"
-      fitView
-      proOptions={{ hideAttribution: false }}
-    >
-      <Background />
-      <Controls />
-      <MiniMap pannable zoomable />
-    </ReactFlow>
+    <div className="h-full" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={NODE_TYPES}
+        onNodesChange={onNodesChange}
+        onConnect={onConnect}
+        onSelectionChange={onSelectionChange}
+        colorMode="dark"
+        fitView
+        proOptions={{ hideAttribution: false }}
+      >
+        <Background />
+        <Controls />
+        <MiniMap pannable zoomable />
+        <BoardCursorLayer markers={cursors} />
+      </ReactFlow>
+    </div>
   )
 }

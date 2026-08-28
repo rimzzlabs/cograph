@@ -201,5 +201,15 @@ check(
   unknown.isError === true && unknown.content[0].text.includes("redis"),
 )
 
+// The first tool call gives the agent its seat: a participant chip with the
+// agent badge, and a cursor pinned to the node the call touched.
+await new Promise((resolve) => setTimeout(resolve, 500))
+const pageText = await evaluate("document.body.innerText")
+check("agent appears in the participant list", pageText.includes("'s agent"))
+check(
+  "engine tool count is visible in the inspector",
+  /The browser engine reports \d+ registered tool/.test(pageText),
+)
+
 ws.close()
 cleanup(failed ? 1 : 0)

@@ -432,6 +432,30 @@ list, so it lands instantly.
 
 ---
 
+## 021 — An Example button that teaches the canvas
+
+**Date:** 2026-08-29
+
+A new user opens an empty board and does not know the gestures. The tool inspector explains the
+agent, but nothing explains the canvas.
+
+The top-left panel now has an Example button beside the Service button. One click seeds a small
+checkout system: a gateway, two services, a datastore, a queue, and one external service. Every
+service kind appears once, and the edges show calls, reads, and publishes. Each node's note
+teaches one gesture: drag, double-click, the four handles, the right-click menu, and Backspace.
+The view then frames the whole example.
+
+The seed writes through the same Yjs mutations that humans and agent tools use, inside one
+transaction, so peers receive one sync burst. Labels deduplicate against the live board, so a
+second click cannot break the agent's label-based lookup. `addNode` gained an optional `note`
+field for this.
+
+**Rejected:** a modal tutorial (a board that shows is better than a dialog that tells, and the
+notes double as `read_service_notes` demo content); seeding only on an empty board (the demo room
+is rarely empty).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

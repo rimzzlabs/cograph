@@ -13,10 +13,12 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react"
+import { BookOpen } from "lucide-react"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { GraphNode, ServiceKind } from "@/lib/graph/types"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
+import { seedExampleBoard } from "@/lib/yjs/example-board"
 import {
   addNode,
   connectNodes,
@@ -64,7 +66,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
   const selectedEdgeIds = useSessionStore((state) => state.selectedEdgeIds)
   const setSelection = useSessionStore((state) => state.setSelection)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, fitView } = useReactFlow()
   const cursorFrame = useRef<number | null>(null)
 
   const editable = canEdit(me.role)
@@ -255,6 +257,17 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     })
   }
 
+  function loadExample() {
+    seedExampleBoard({
+      board,
+      authorId: me.id,
+      existingLabels: new Set(snapshot.nodes.map((node) => node.data.label)),
+    })
+    // The new nodes arrive through the snapshot on the next render. Frame them
+    // once they have measured, so the whole example is on screen.
+    setTimeout(() => void fitView({ padding: 0.15, duration: 300 }), 120)
+  }
+
   function saveNodeEdits(result: NodeDialogResult) {
     if (!editingNode) return
     updateNode({
@@ -303,23 +316,29 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         <BoardCursorLayer markers={cursors} />
         {editable ? (
           <Panel position="top-left">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                addServiceAt({
-                  kind: "service",
-                  position: screenToFlowPosition({
-                    x: window.innerWidth / 2,
-                    y: window.innerHeight / 2,
-                  }),
-                })
-              }
-            >
-              + Service
-            </Button>
+            <div className="flex gap-1.5">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  addServiceAt({
+                    kind: "service",
+                    position: screenToFlowPosition({
+                      x: window.innerWidth / 2,
+                      y: window.innerHeight / 2,
+                    }),
+                  })
+                }
+              >
+                + Service
+              </Button>
+              <Button variant="secondary" size="sm" onClick={loadExample}>
+                <BookOpen aria-hidden="true" />
+                Example
+              </Button>
+            </div>
             <p className="mt-1 text-[10px] text-ink-muted">
-              Right-click the canvas for more. Drag between handles to connect.
+              Right-click the canvas for more. Example adds a sample system with a tip on each card.
             </p>
           </Panel>
         ) : null}

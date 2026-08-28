@@ -52,6 +52,19 @@ export function BoardContextMenu(props: BoardContextMenuProps) {
       DOMRect.fromRect({ x: menu.screen.x, y: menu.screen.y, width: 0, height: 0 }),
   }
 
+  // There is no trigger element, so the primitive cannot restore focus on its
+  // own. Send it back to the node or edge that opened the menu, or to the pane.
+  function focusOrigin(): HTMLElement | boolean {
+    const selector =
+      menu.target === "node"
+        ? `.react-flow__node[data-id="${CSS.escape(menu.nodeId)}"]`
+        : menu.target === "edge"
+          ? `.react-flow__edge[data-id="${CSS.escape(menu.edgeId)}"]`
+          : ".react-flow__pane"
+    const exact = document.querySelector<HTMLElement>(selector)
+    return exact ?? document.querySelector<HTMLElement>(".react-flow__pane") ?? true
+  }
+
   return (
     <DropdownMenu
       open
@@ -61,6 +74,7 @@ export function BoardContextMenu(props: BoardContextMenuProps) {
     >
       <DropdownMenuContent
         anchor={anchor}
+        finalFocus={() => focusOrigin()}
         align="start"
         side="right"
         sideOffset={2}

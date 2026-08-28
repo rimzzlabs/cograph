@@ -14,6 +14,11 @@ import {
 } from "@xyflow/react"
 import { BookOpen } from "lucide-react"
 import { useCallback, useMemo, useRef, useState } from "react"
+import {
+  BoardConnectDialog,
+  type ConnectDialogResult,
+  type ConnectPair,
+} from "@/components/board/board-connect-dialog"
 import { Button } from "@/components/ui/button"
 import { findDependents } from "@/lib/graph/traversal"
 import type { GraphNode, ServiceKind, ServiceStatus } from "@/lib/graph/types"
@@ -72,6 +77,8 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   const editable = canEdit(me.role)
   const [menu, setMenu] = useState<ContextMenuState | null>(null)
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null)
+  const [connectPair, setConnectPair] = useState<ConnectPair | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const editingNode = useMemo<GraphNode | null>(
     () => snapshot.nodes.find((node) => node.id === editingNodeId) ?? null,
@@ -99,6 +106,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         id: node.id,
         type: "service",
         position: node.position,
+        ariaLabel: `${node.data.label}, ${node.data.kind}`,
         selected: selectedNodeIds.includes(node.id),
         data: {
           ...node.data,
@@ -106,6 +114,11 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         },
       })),
     [snapshot.nodes, highlightedNodeIds, selectedNodeIds, impactedIds],
+  )
+
+  const nodeLabels = useMemo(
+    () => new Map(snapshot.nodes.map((node) => [node.id, node.data.label])),
+    [snapshot.nodes],
   )
 
   const edges = useMemo<Edge[]>(
@@ -116,10 +129,13 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         source: edge.source,
         target: edge.target,
         label: edge.kind,
+        ariaLabel: `${nodeLabels.get(edge.source) ?? "a service"} ${edge.kind} ${
+          nodeLabels.get(edge.target) ?? "a service"
+        }`,
         selected: selectedEdgeIds.includes(edge.id),
         animated: edge.kind === "publishes",
       })),
-    [snapshot.edges, selectedEdgeIds],
+    [snapshot.edges, nodeLabels, selectedEdgeIds],
   )
 
   const onNodesChange = useCallback(
@@ -253,6 +269,70 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     })
   }
 
+  /**
+   * The keyboard paths the mouse handlers cannot cover: Shift+F10 or the Menu
+   * key opens the context menu on the focused node, edge, or pane, and C with
+   * exactly two selected nodes opens the connect dialog.
+   */
+  function onKeyDown(event: React.KeyboardEvent) {
+    if (!editable) return
+
+    const isMenuKey = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)
+    if (isMenuKey) {
+      event.preventDefault()
+      const origin = event.target as HTMLElement
+
+      const nodeEl = origin.closest<HTMLElement>(".react-flow__node")
+      if (nodeEl?.dataset.id) {
+        const node = snapshot.nodes.find((item) => item.id === nodeEl.dataset.id)
+        const rect = nodeEl.getBoundingClientRect()
+        setMenu({
+          target: "node",
+          screen: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+          nodeId: nodeEl.dataset.id,
+          label: node?.data.label ?? "Service",
+          status: node?.data.status ?? "ok",
+        })
+        return
+      }
+
+      const edgeEl = origin.closest<HTMLElement>(".react-flow__edge")
+      if (edgeEl?.dataset.id) {
+        const edge = snapshot.edges.find((item) => item.id === edgeEl.dataset.id)
+        const rect = edgeEl.getBoundingClientRect()
+        setMenu({
+          target: "edge",
+          screen: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+          edgeId: edgeEl.dataset.id,
+          kind: edge?.kind ?? "calls",
+        })
+        return
+      }
+
+      const host = containerRef.current
+      if (!host) return
+      const rect = host.getBoundingClientRect()
+      const screen = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      setMenu({ target: "pane", screen, flow: screenToFlowPosition(screen) })
+      return
+    }
+
+    const plainKey = !event.ctrlKey && !event.metaKey && !event.altKey
+    if (event.key.toLowerCase() === "c" && plainKey && selectedNodeIds.length === 2) {
+      const source = snapshot.nodes.find((node) => node.id === selectedNodeIds[0])
+      const target = snapshot.nodes.find((node) => node.id === selectedNodeIds[1])
+      if (source && target) {
+        event.preventDefault()
+        setConnectPair({ source, target })
+      }
+    }
+  }
+
+  function saveConnection(result: ConnectDialogResult) {
+    connectNodes({ board, source: result.source, target: result.target, kind: result.kind })
+    setConnectPair(null)
+  }
+
   function addServiceAt(params: { kind: ServiceKind; position: { x: number; y: number } }) {
     const count = snapshot.nodes.filter((node) => node.data.kind === params.kind).length
     addNode({
@@ -293,7 +373,14 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   }
 
   return (
-    <div className="h-full" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: delegates keys to the focusable React Flow elements inside
+    <div
+      ref={containerRef}
+      className="h-full"
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+      onKeyDown={onKeyDown}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -369,6 +456,12 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         node={editingNode}
         onSubmit={saveNodeEdits}
         onClose={() => setEditingNodeId(null)}
+      />
+
+      <BoardConnectDialog
+        pair={connectPair}
+        onSubmit={saveConnection}
+        onClose={() => setConnectPair(null)}
       />
     </div>
   )

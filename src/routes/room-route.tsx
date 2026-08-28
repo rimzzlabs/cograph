@@ -7,6 +7,7 @@ import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
 import { ShareViewLink } from "@/components/presence/share-view-link"
 import { Badge } from "@/components/ui/badge"
+import { useBoardAnnouncements } from "@/lib/graph/use-board-announcements"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
 import { useLastActiveAt } from "@/lib/presence/use-last-active"
@@ -83,6 +84,17 @@ export function RoomRoute() {
   const peers = useMemo(() => roster.map((entry) => entry.participant), [roster])
   const colors = useParticipantColors({ me, peers })
 
+  const participantNames = useMemo(
+    () => new Map([me, ...peers].map((participant) => [participant.id, participant.name])),
+    [me, peers],
+  )
+  const announcement = useBoardAnnouncements({
+    board,
+    snapshot,
+    names: participantNames,
+    meId: me.id,
+  })
+
   const cursors = useMemo<CursorMarker[]>(
     () =>
       roster
@@ -146,6 +158,10 @@ export function RoomRoute() {
         </main>
         <ToolInspector />
       </div>
+
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
 
       <ParticipantNameDialog
         open={nameDialogOpen}

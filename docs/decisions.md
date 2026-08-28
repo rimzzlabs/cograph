@@ -330,6 +330,7 @@ own the clock).
 
 ---
 
+<<<<<<< HEAD
 ## 017 — Recolour the theme: calm warm neutrals, no blue
 
 **Date:** 2026-08-29
@@ -482,8 +483,6 @@ document order.
 
 **Date:** 2026-08-29
 
-Entry 023 is on the viewer-link branch. This entry is the incident feature.
-
 A node now carries an optional `status` field in the shared document. `simulate_failure` marks a
 service down, and `resolve_incident` restores every down service. Humans get the same power in the
 node context menu, through the same mutation. A down card shows a solid danger border, a danger icon
@@ -522,6 +521,42 @@ write. The link is a demo of the tool surface, not a security boundary.
 
 **Rejected:** persisting the role (a viewer link must not lock a browser profile out of its own
 rooms); a share dialog with both links (the edit link is the plain URL, one button is enough).
+
+---
+
+## 025 — Pay down the board's accessibility debt
+
+**Date:** 2026-08-28, rebased and renumbered from 017 on 2026-08-29
+
+Issue #8 accepted the editing surface with known gaps. This closes the keyboard and screen-reader
+gaps that an automated check can hold in place:
+
+- **Names and roles.** Every node carries `aria-label` "label, kind"; every edge carries "source
+  kind target". React Flow renders them natively from the `ariaLabel` field.
+- **Keyboard path to the menu.** Shift+F10 or the Menu key opens the context menu on the focused
+  node, edge, or pane. The wrapper listens once and reads the target from the focused element.
+- **Focus return.** The menu has no trigger element, so the primitive cannot restore focus on its
+  own. A `finalFocus` callback sends focus back to the node or edge that opened the menu, or to the
+  pane.
+- **Keyboard connect.** With exactly two selected nodes, C opens a dialog: direction with a swap
+  control, kind, connect. Selection order sets the direction.
+- **Live region.** A visually hidden `role="status"` region announces board deltas — adds, removals,
+  renames, dependency changes — with author attribution for changes by others. Diffing starts after
+  the first sync, so joining a board does not read the whole graph aloud. A provider that cannot
+  reach the server (`connection-error`) still announces local edits, because a failed connect never
+  emits a "disconnected" status.
+
+The work found the selection bug first: the graph is fully controlled, but `select` changes were
+ignored, so React Flow cleared every selection on the next snapshot render. Main fixed the same
+bug independently in entries 020 and 022. The rebase keeps the fix from main and drops the version
+from this branch.
+
+`scripts/a11y-check.mjs` drives the built app in headless Chrome with trusted input and asserts all
+of the above — 10 checks. It does not replace a pass with a real screen reader, which stays open on
+#8.
+
+**Rejected:** ARIA attributes through `domAttributes` (React Flow has a first-class `ariaLabel`);
+announcing every awareness change (only graph deltas matter to a reader).
 
 ---
 

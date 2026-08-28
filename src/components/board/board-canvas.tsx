@@ -7,7 +7,6 @@ import {
   type EdgeChange,
   type Node,
   type NodeChange,
-  type OnSelectionChangeParams,
   Panel,
   ReactFlow,
   ReactFlowProvider,
@@ -177,16 +176,6 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     [board, editable],
   )
 
-  const onSelectionChange = useCallback(
-    (params: OnSelectionChangeParams) => {
-      setSelection({
-        nodes: params.nodes.map((node) => node.id),
-        edges: params.edges.map((edge) => edge.id),
-      })
-    },
-    [setSelection],
-  )
-
   const onPaneClick = useCallback(() => {
     setSelection({ nodes: [], edges: [] })
   }, [setSelection])
@@ -296,7 +285,6 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onSelectionChange={onSelectionChange}
         onPaneClick={onPaneClick}
         onPaneContextMenu={openPaneMenu}
         onNodeContextMenu={openNodeMenu}

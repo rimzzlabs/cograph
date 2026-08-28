@@ -55,6 +55,17 @@ const baseStore = create<SessionState>()(
       highlightedNodeIds: [],
       setSelection: (selection) =>
         set((state) => {
+          // Idempotence breaks feedback loops: React Flow re-reports the
+          // selection whenever the controlled props re-sync, and an
+          // unconditional write here would re-render forever. Order is
+          // ignored on purpose — the store keeps click order, which
+          // connect_selected_services uses for direction.
+          if (
+            sameIdSet(state.selectedNodeIds, selection.nodes) &&
+            sameIdSet(state.selectedEdgeIds, selection.edges)
+          ) {
+            return
+          }
           state.selectedNodeIds = selection.nodes
           state.selectedEdgeIds = selection.edges
         }),
@@ -93,6 +104,12 @@ const baseStore = create<SessionState>()(
     },
   ),
 )
+
+function sameIdSet(current: string[], next: string[]) {
+  if (current.length !== next.length) return false
+  const ids = new Set(current)
+  return next.every((id) => ids.has(id))
+}
 
 export const useSessionStore = createSelectors(baseStore)
 

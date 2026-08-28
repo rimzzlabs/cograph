@@ -181,7 +181,8 @@ All five open questions are answered:
 Answer 3 costs stability. A guaranteed hue distance and a colour that never moves cannot both hold.
 The hue of a peer can move when another participant joins. The colour of the local user never moves.
 
-Status: implemented. See entry 012 for a correction to the colour rule.
+Status: implemented, and verified in a browser on 2026-08-28. See entry 012 for a correction to the
+colour rule.
 
 **Consequence for the demo:** two tabs in one browser will show one person. The video must use an
 incognito window or a second browser to show multiplayer use.

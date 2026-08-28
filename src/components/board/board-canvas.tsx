@@ -14,6 +14,7 @@ import {
   useReactFlow,
 } from "@xyflow/react"
 import { useCallback, useMemo, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
 import type { GraphNode, ServiceKind } from "@/lib/graph/types"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
 import {
@@ -244,8 +245,9 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         <BoardCursorLayer markers={cursors} />
         {editable ? (
           <Panel position="top-left">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() =>
                 addServiceAt({
                   kind: "service",
@@ -255,10 +257,9 @@ function BoardCanvasInner(props: BoardCanvasProps) {
                   }),
                 })
               }
-              className="rounded-md border border-line bg-surface-raised px-3 py-1.5 font-medium text-ink text-xs shadow hover:bg-surface"
             >
               + Service
-            </button>
+            </Button>
             <p className="mt-1 text-[10px] text-ink-muted">
               Right-click the canvas for more. Drag between handles to connect.
             </p>

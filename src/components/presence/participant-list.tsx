@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge"
 import type { PresenceState } from "@/lib/presence/use-presence"
 import { cn } from "@/lib/utils"
 import type { Participant } from "@/stores/session-store"
@@ -26,17 +27,22 @@ export function ParticipantList(props: ParticipantListProps) {
       </span>
       <ul className="flex items-center gap-2">
         <li>
-          <button
-            type="button"
-            onClick={onEditName}
-            aria-label={`You are ${me.name}. Change your display name.`}
-            className="flex items-center gap-1.5 rounded-full border bg-surface-raised px-2 py-1 text-xs hover:bg-surface"
+          <Badge
+            render={
+              <button
+                type="button"
+                onClick={onEditName}
+                aria-label={`You are ${me.name}. Change your display name.`}
+              />
+            }
+            variant="outline"
+            className="gap-1.5 bg-surface-raised hover:bg-surface"
             style={{ borderColor: colors.get(me.id) ?? FALLBACK_COLOR }}
           >
             <ParticipantDot color={colors.get(me.id) ?? FALLBACK_COLOR} />
             <span className="text-ink">{me.name}</span>
             <span className="text-ink-muted">(you)</span>
-          </button>
+          </Badge>
         </li>
         {others.map((other) => (
           <ParticipantChip
@@ -59,15 +65,19 @@ export function ParticipantChip(props: ParticipantChipProps) {
   const { participant, color } = props
 
   return (
-    <li
-      className="flex items-center gap-1.5 rounded-full border bg-surface-raised px-2 py-1 text-xs"
-      style={{ borderColor: color }}
-    >
-      <ParticipantDot color={color} />
-      <span className="text-ink">{participant.name}</span>
-      {participant.kind === "agent" ? (
-        <span className="rounded bg-agent/15 px-1 font-medium text-[10px] text-agent">agent</span>
-      ) : null}
+    <li>
+      <Badge variant="outline" className="gap-1.5 bg-surface-raised" style={{ borderColor: color }}>
+        <ParticipantDot color={color} />
+        <span className="text-ink">{participant.name}</span>
+        {participant.kind === "agent" ? (
+          <Badge
+            variant="secondary"
+            className="h-4 rounded px-1 text-[10px] text-agent bg-agent/15"
+          >
+            agent
+          </Badge>
+        ) : null}
+      </Badge>
     </li>
   )
 }

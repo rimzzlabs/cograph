@@ -1,4 +1,23 @@
-import { useEffect, useId, useRef, useState } from "react"
+import { useId, useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import type { GraphNode, ServiceKind } from "@/lib/graph/types"
 import { SERVICE_KINDS } from "@/lib/graph/types"
 
@@ -17,32 +36,38 @@ interface BoardNodeDialogProps {
   onClose: () => void
 }
 
-/** Edits a service's label, kind, and note in a native dialog element. */
+/** Edits a service's label, kind, and note. */
 export function BoardNodeDialog(props: BoardNodeDialogProps) {
   const { node, onSubmit, onClose } = props
 
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const titleId = useId()
-  const [label, setLabel] = useState("")
-  const [kind, setKind] = useState<ServiceKind>("service")
-  const [note, setNote] = useState("")
+  return (
+    <Dialog
+      open={node !== null}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose()
+      }}
+    >
+      <DialogContent>
+        {/* The form mounts with the dialog, so it loads the edited node fresh. */}
+        {node ? <BoardNodeForm node={node} onSubmit={onSubmit} /> : null}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+interface BoardNodeFormProps {
+  node: GraphNode
+  onSubmit: (result: NodeDialogResult) => void
+}
+
+function BoardNodeForm(props: BoardNodeFormProps) {
+  const labelId = useId()
+  const kindId = useId()
+  const noteId = useId()
+  const [label, setLabel] = useState(props.node.data.label)
+  const [kind, setKind] = useState<ServiceKind>(props.node.data.kind)
+  const [note, setNote] = useState(props.node.data.note)
   const [error, setError] = useState<string | null>(null)
-
-  // Sync with the external dialog element, and reload the form when the
-  // edited node changes.
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    if (node && !dialog.open) {
-      setLabel(node.data.label)
-      setKind(node.data.kind)
-      setNote(node.data.note)
-      setError(null)
-      dialog.showModal()
-    }
-    if (!node && dialog.open) dialog.close()
-  }, [node])
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -57,82 +82,66 @@ export function BoardNodeDialog(props: BoardNodeDialogProps) {
       return
     }
 
-    onSubmit({ label: trimmed, kind, note: note.trim().slice(0, MAX_NOTE_LENGTH) })
+    props.onSubmit({ label: trimmed, kind, note: note.trim().slice(0, MAX_NOTE_LENGTH) })
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby={titleId}
-      onClose={onClose}
-      className="m-auto rounded-lg border border-line bg-surface p-0 text-ink backdrop:bg-black/60"
-    >
-      <form onSubmit={handleSubmit} className="flex w-96 flex-col gap-3 p-4">
-        <h2 id={titleId} className="font-semibold text-sm">
-          Edit service
-        </h2>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <DialogHeader>
+        <DialogTitle>Edit service</DialogTitle>
+      </DialogHeader>
 
-        <label className="flex flex-col gap-1 text-ink-muted text-xs">
-          Label
-          <input
-            value={label}
-            onChange={(event) => {
-              setLabel(event.target.value)
-              setError(null)
-            }}
-            maxLength={MAX_LABEL_LENGTH}
-            className="rounded-md border border-line bg-surface-raised px-2 py-1.5 text-ink text-sm outline-none focus-visible:border-human"
-          />
-        </label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={labelId}>Label</Label>
+        <Input
+          id={labelId}
+          value={label}
+          onChange={(event) => {
+            setLabel(event.target.value)
+            setError(null)
+          }}
+          maxLength={MAX_LABEL_LENGTH}
+        />
+      </div>
 
-        <label className="flex flex-col gap-1 text-ink-muted text-xs">
-          Kind
-          <select
-            value={kind}
-            onChange={(event) => setKind(event.target.value as ServiceKind)}
-            className="rounded-md border border-line bg-surface-raised px-2 py-1.5 text-ink text-sm outline-none focus-visible:border-human"
-          >
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={kindId}>Kind</Label>
+        <Select value={kind} onValueChange={(value) => setKind(value as ServiceKind)}>
+          <SelectTrigger id={kindId} className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
             {SERVICE_KINDS.map((option) => (
-              <option key={option} value={option}>
+              <SelectItem key={option} value={option}>
                 {option}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-        </label>
+          </SelectContent>
+        </Select>
+      </div>
 
-        <label className="flex flex-col gap-1 text-ink-muted text-xs">
-          Note
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            maxLength={MAX_NOTE_LENGTH}
-            rows={3}
-            className="resize-none rounded-md border border-line bg-surface-raised px-2 py-1.5 text-ink text-sm outline-none focus-visible:border-human"
-          />
-        </label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={noteId}>Note</Label>
+        <Textarea
+          id={noteId}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          maxLength={MAX_NOTE_LENGTH}
+          rows={3}
+          className="resize-none"
+        />
+      </div>
 
-        {error ? (
-          <p role="alert" className="text-danger text-xs">
-            {error}
-          </p>
-        ) : null}
+      {error ? (
+        <p role="alert" className="text-destructive text-xs">
+          {error}
+        </p>
+      ) : null}
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-3 py-1.5 text-ink-muted text-xs hover:text-ink"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-human px-3 py-1.5 font-medium text-canvas text-xs"
-          >
-            Save
-          </button>
-        </div>
-      </form>
-    </dialog>
+      <DialogFooter>
+        <DialogClose render={<Button variant="ghost">Cancel</Button>} />
+        <Button type="submit">Save</Button>
+      </DialogFooter>
+    </form>
   )
 }

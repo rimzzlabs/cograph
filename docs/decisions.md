@@ -262,6 +262,51 @@ agent's mutating tools.
 
 ---
 
+## 015 — Rebuild the UI on shadcn with Base UI primitives
+
+**Date:** 2026-08-28
+
+Decision 010 skipped shadcn because the app then had only a panel and some chips. The app now has
+dialogs, a menu, form fields, buttons, and badges. That surface earns a component system. The house
+convention is shadcn. The primitive layer is Base UI, because the user chose it over Radix.
+
+Init choices, pinned: CLI `shadcn@4.19.0`, `init -b base -p nova`, CSS variables on, RTL off. The
+CLI lives in `devDependencies`. The Geist font from the preset is removed — the app keeps the system
+font stack.
+
+The OKLCH tokens in `src/index.css` stay the source of truth. Each shadcn contract variable
+(`background`, `foreground`, `primary`, `muted`, `accent`, `destructive`, `border`, `ring`, and the
+rest) is an alias of one of our tokens. The app has one theme, and it is dark: the tokens sit on
+`:root`, and `index.html` sets `class="dark"` so the components' `dark:` variants stay active.
+
+One CLI trap: the CLI reads the root `tsconfig.json` to resolve the `@` alias. Ours is a
+solution-style file with no `paths`, so the CLI wrote a literal `@/` directory. The root file now
+carries `compilerOptions.paths`, and `shadcn add` lands in `src/`.
+
+The button follows the design references: a vertical gradient made of white and black overlay stops
+on `bg-primary`, a hairline inner highlight, a soft shadow, a brighter ramp on hover, and
+`active:scale-[0.97]` with a 150 ms transition. `motion-reduce:` disables the transition and the
+scale. Tailwind 4 registers gradient stops with `@property`, so the hover ramp eases instead of
+snapping.
+
+The board's right-click menu could not use the ContextMenu primitive, because React Flow owns the
+right-click and reports the target (pane, node, or edge). The menu is a controlled Base UI Menu
+anchored to the pointer position through a virtual anchor. The primitive supplies focus, arrow keys,
+Home and End, typeahead, and dismissal — which pays down part of the #8 debt.
+
+The two dialogs moved from native `dialog` elements to the Base UI Dialog. The form mounts with the
+dialog, so its state resets on each open — no sync effect. Chips and badges sit on the shared
+`Badge`; the participant colour still comes in through an inline `style`.
+
+Bundle cost, gzip: JS 179 kB → 233 kB, CSS 6.4 kB → 11 kB. About 54 kB for the whole primitive
+layer. Accepted.
+
+**Rejected:** Radix as the primitive layer (the user chose Base UI); keeping the hand-rolled
+components (the a11y debt in #8 was growing); replacing our tokens with the shadcn palette (the
+theme is part of the product).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

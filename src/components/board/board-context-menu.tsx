@@ -8,11 +8,23 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { EDGE_KINDS, type EdgeKind, SERVICE_KINDS, type ServiceKind } from "@/lib/graph/types"
+import {
+  EDGE_KINDS,
+  type EdgeKind,
+  SERVICE_KINDS,
+  type ServiceKind,
+  type ServiceStatus,
+} from "@/lib/graph/types"
 
 export type ContextMenuState =
   | { target: "pane"; screen: { x: number; y: number }; flow: { x: number; y: number } }
-  | { target: "node"; screen: { x: number; y: number }; nodeId: string; label: string }
+  | {
+      target: "node"
+      screen: { x: number; y: number }
+      nodeId: string
+      label: string
+      status: ServiceStatus
+    }
   | { target: "edge"; screen: { x: number; y: number }; edgeId: string; kind: EdgeKind }
 
 interface BoardContextMenuProps {
@@ -20,6 +32,7 @@ interface BoardContextMenuProps {
   onClose: () => void
   onAddService: (params: { kind: ServiceKind; position: { x: number; y: number } }) => void
   onEditNode: (nodeId: string) => void
+  onSetNodeStatus: (nodeId: string, status: ServiceStatus) => void
   onDeleteNode: (nodeId: string) => void
   onSetEdgeKind: (params: { edgeId: string; kind: EdgeKind }) => void
   onDeleteEdge: (edgeId: string) => void
@@ -72,6 +85,15 @@ export function BoardContextMenu(props: BoardContextMenuProps) {
           <DropdownMenuGroup>
             <DropdownMenuLabel>{menu.label}</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => props.onEditNode(menu.nodeId)}>Edit…</DropdownMenuItem>
+            {menu.status === "down" ? (
+              <DropdownMenuItem onClick={() => props.onSetNodeStatus(menu.nodeId, "ok")}>
+                Mark as recovered
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => props.onSetNodeStatus(menu.nodeId, "down")}>
+                Mark as down
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem variant="destructive" onClick={() => props.onDeleteNode(menu.nodeId)}>
               Delete
             </DropdownMenuItem>

@@ -63,6 +63,7 @@ export function BoardServiceNode(props: NodeProps) {
   const data = props.data as unknown as BoardServiceNodeData
   const kind = KIND_STYLES[data.kind]
   const KindIcon = kind.icon
+  const isDown = data.status === "down"
 
   return (
     <div
@@ -77,7 +78,10 @@ export function BoardServiceNode(props: NodeProps) {
         "hover:bg-surface-raised hover:shadow-lg hover:shadow-black/25",
         kind.border,
         props.selected && kind.outline,
-        data.highlighted && "border-danger bg-danger/15",
+        // Impacted by an outage or an agent highlight: amber tint. Down
+        // itself: solid danger, so cause and effect read differently.
+        data.highlighted && "border-warn/70 bg-warn/10",
+        isDown && "border-danger bg-danger/15",
       )}
     >
       {HANDLES.map((handle) => (
@@ -91,14 +95,22 @@ export function BoardServiceNode(props: NodeProps) {
       ))}
       <div className="flex items-center gap-2.5">
         <span
-          className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", kind.chip)}
+          className={cn(
+            "flex size-7 shrink-0 items-center justify-center rounded-lg",
+            isDown ? "bg-danger/15 text-danger" : kind.chip,
+          )}
         >
           <KindIcon size={15} aria-hidden="true" />
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-ink text-sm">{data.label}</p>
           <p className="text-[11px] text-ink-muted capitalize">{data.kind}</p>
         </div>
+        {isDown ? (
+          <span className="shrink-0 rounded-full bg-danger/20 px-1.5 py-0.5 font-medium text-[10px] text-danger">
+            down
+          </span>
+        ) : null}
       </div>
       {data.note ? (
         <p className="mt-1.5 line-clamp-2 text-ink-muted text-xs italic">{data.note}</p>

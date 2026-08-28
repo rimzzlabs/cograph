@@ -15,7 +15,8 @@ import {
 import { BookOpen } from "lucide-react"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import type { GraphNode, ServiceKind } from "@/lib/graph/types"
+import { findDependents } from "@/lib/graph/traversal"
+import type { GraphNode, ServiceKind, ServiceStatus } from "@/lib/graph/types"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
 import { seedExampleBoard } from "@/lib/yjs/example-board"
 import {
@@ -77,6 +78,18 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     [snapshot.nodes, editingNodeId],
   )
 
+  // The impact of an outage is derived, never stored: every client walks the
+  // dependents of each down service, so all peers see the same amber tint from
+  // the shared status flags alone.
+  const impactedIds = useMemo(() => {
+    const impacted = new Set<string>()
+    for (const node of snapshot.nodes) {
+      if (node.data.status !== "down") continue
+      for (const id of findDependents(snapshot, node.id)) impacted.add(id)
+    }
+    return impacted
+  }, [snapshot])
+
   // Selection is controlled from the session store, the same way Yjs owns the
   // graph. React Flow reports selection intents and this feeds them back, so a
   // pane click clears the ring, the store, and the agent tool surface together.
@@ -89,10 +102,10 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         selected: selectedNodeIds.includes(node.id),
         data: {
           ...node.data,
-          highlighted: highlightedNodeIds.includes(node.id),
+          highlighted: highlightedNodeIds.includes(node.id) || impactedIds.has(node.id),
         },
       })),
-    [snapshot.nodes, highlightedNodeIds, selectedNodeIds],
+    [snapshot.nodes, highlightedNodeIds, selectedNodeIds, impactedIds],
   )
 
   const edges = useMemo<Edge[]>(
@@ -214,13 +227,18 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   function openNodeMenu(event: React.MouseEvent | MouseEvent, node: Node) {
     event.preventDefault()
     if (!editable) return
-    const data = node.data as { label?: string }
+    const data = node.data as { label?: string; status?: ServiceStatus }
     setMenu({
       target: "node",
       screen: { x: event.clientX, y: event.clientY },
       nodeId: node.id,
       label: data.label ?? "Service",
+      status: data.status ?? "ok",
     })
+  }
+
+  function setNodeStatus(nodeId: string, status: ServiceStatus) {
+    updateNode({ board, id: nodeId, patch: { data: { status, authorId: me.id } } })
   }
 
   function openEdgeMenu(event: React.MouseEvent | MouseEvent, edge: Edge) {
@@ -338,6 +356,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
           onClose={() => setMenu(null)}
           onAddService={addServiceAt}
           onEditNode={setEditingNodeId}
+          onSetNodeStatus={setNodeStatus}
           onDeleteNode={(nodeId) => removeNode(board, nodeId)}
           onSetEdgeKind={(params) =>
             updateEdgeKind({ board, id: params.edgeId, kind: params.kind })

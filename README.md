@@ -17,9 +17,10 @@ registered. It does not exist for the agent, so the agent cannot call it and get
 | Board state           | Tools the agent can call                                   |
 | --------------------- | ---------------------------------------------------------- |
 | Any                   | `describe_board`, `find_blast_radius`, `find_dependencies` |
-| Role permits editing  | adds `add_service`                                         |
+| Role permits editing  | adds `add_service`, `simulate_failure`                     |
 | One service selected  | adds `update_selected_service`, `delete_selected_service`  |
 | Two services selected | adds `connect_selected_services`                           |
+| A service is down     | adds `resolve_incident`                                    |
 | Role is viewer        | read-only tools only                                       |
 
 Registration and removal use an `AbortSignal`. React effect cleanup calls `controller.abort()`, so

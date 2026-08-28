@@ -478,6 +478,33 @@ set in document order.
 
 ---
 
+## 024 — Incident mode: a shared outage with a derived blast radius
+
+**Date:** 2026-08-29
+
+Entry 023 is on the viewer-link branch. This entry is the incident feature.
+
+A node now carries an optional `status` field in the shared document. `simulate_failure` marks a
+service down, and `resolve_incident` restores every down service. Humans get the same power in the
+node context menu, through the same mutation. A down card shows a solid danger border, a danger
+icon chip, and a "down" pill.
+
+The impact is derived, never stored. Every client walks the dependents of each down service and
+tints them amber. The old `find_blast_radius` text claimed a highlight "for everyone", and that
+was only true locally — the session store is not shared. The status flag is in the Yjs document,
+so the outage and its blast radius are now truly shared state.
+
+`resolve_incident` registers only while a service is down. The option list itself tells the agent
+whether an incident exists — the state-scoped surface from decision 007, applied to a story the
+video can tell. Impact highlight moved from danger to amber, so cause (down, danger) and effect
+(impacted, amber) read differently.
+
+**Rejected:** storing the affected set in the document (derivable state drifts, and dependents
+change when edges change mid-incident); an incident banner UI (the board already shows it, and the
+hackathon clock is real).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

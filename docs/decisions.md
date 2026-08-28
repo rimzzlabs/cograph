@@ -170,7 +170,18 @@ The user sets a display name. A hash of the name gives a hue. The lightness and 
 fixed, so every colour is legible on the dark canvas. When two participants share a name, only the
 colour of the peer moves.
 
-Status: proposed, not implemented. Five open questions remain in the issue.
+All five open questions are answered:
+
+1. Use OKLCH, not hex.
+2. Do not block the first load. Show a temporary name in the header. A dialog changes it.
+3. Apply a minimum hue distance of 30 degrees across every present participant.
+4. One identity shows one cursor. The most recent session wins.
+5. An agent uses the same colour rule. It gets no reserved colour.
+
+Answer 3 costs stability. A guaranteed hue distance and a colour that never moves cannot both hold.
+The hue of a peer can move when another participant joins. The colour of the local user never moves.
+
+Status: agreed, not implemented.
 
 **Consequence for the demo:** two tabs in one browser will show one person. The video must use an
 incognito window or a second browser to show multiplayer use.

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { getModelContext, isWebMcpAvailable } from "@/lib/mcp/types"
 import { cn } from "@/lib/utils"
 import { useToolRegistryStore } from "@/stores/tool-registry-store"
@@ -110,28 +111,24 @@ interface ToolBadgesProps {
 function ToolBadges(props: ToolBadgesProps) {
   return (
     <span className="flex gap-1">
-      {props.readOnly ? <Badge tone="agent">read</Badge> : null}
-      {props.destructive ? <Badge tone="danger">destructive</Badge> : null}
-      {props.untrusted ? <Badge tone="warn">untrusted</Badge> : null}
+      {props.readOnly ? <ToolBadge className="bg-agent/15 text-agent">read</ToolBadge> : null}
+      {props.destructive ? (
+        <ToolBadge className="bg-danger/15 text-danger">destructive</ToolBadge>
+      ) : null}
+      {props.untrusted ? <ToolBadge className="bg-warn/15 text-warn">untrusted</ToolBadge> : null}
     </span>
   )
 }
 
-interface BadgeProps {
-  tone: "agent" | "danger" | "warn"
+interface ToolBadgeProps {
+  className: string
   children: string
 }
 
-function Badge(props: BadgeProps) {
-  const tones = {
-    agent: "bg-agent/15 text-agent",
-    danger: "bg-danger/15 text-danger",
-    warn: "bg-warn/15 text-warn",
-  }
-
+function ToolBadge(props: ToolBadgeProps) {
   return (
-    <span className={cn("rounded px-1 py-0.5 font-medium text-[10px]", tones[props.tone])}>
+    <Badge variant="secondary" className={cn("h-4 px-1 text-[10px]", props.className)}>
       {props.children}
-    </span>
+    </Badge>
   )
 }

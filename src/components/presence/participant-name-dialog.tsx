@@ -1,4 +1,15 @@
-import { useEffect, useId, useRef, useState } from "react"
+import { useId, useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 
 const MAX_NAME_LENGTH = 32
 
@@ -9,27 +20,33 @@ interface ParticipantNameDialogProps {
   onClose: () => void
 }
 
-/**
- * Uses the native dialog element, so focus trapping, Escape, and the backdrop
- * come from the platform. The effect below only mirrors React state onto the
- * element's imperative open and close methods.
- */
 export function ParticipantNameDialog(props: ParticipantNameDialogProps) {
   const { open, currentName, onSubmit, onClose } = props
 
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const titleId = useId()
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose()
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        {/* The form mounts with the dialog, so its state resets on each open. */}
+        {open ? <ParticipantNameForm currentName={currentName} onSubmit={onSubmit} /> : null}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+interface ParticipantNameFormProps {
+  currentName: string
+  onSubmit: (name: string) => void
+}
+
+function ParticipantNameForm(props: ParticipantNameFormProps) {
   const errorId = useId()
-  const [draft, setDraft] = useState(currentName)
+  const [draft, setDraft] = useState(props.currentName)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -45,61 +62,42 @@ export function ParticipantNameDialog(props: ParticipantNameDialogProps) {
     }
 
     setError(null)
-    onSubmit(trimmed)
+    props.onSubmit(trimmed)
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby={titleId}
-      onClose={onClose}
-      className="m-auto rounded-lg border border-line bg-surface p-0 text-ink backdrop:bg-black/60"
-    >
-      <form onSubmit={handleSubmit} className="flex w-80 flex-col gap-3 p-4">
-        <h2 id={titleId} className="font-semibold text-sm">
-          Your display name
-        </h2>
-        <p className="text-ink-muted text-xs">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <DialogHeader>
+        <DialogTitle>Your display name</DialogTitle>
+        <DialogDescription>
           Everyone on this board sees this name. Your colour comes from it.
+        </DialogDescription>
+      </DialogHeader>
+
+      <Input
+        // The dialog exists only to edit this field, so focus belongs here.
+        autoFocus
+        value={draft}
+        onChange={(event) => {
+          setDraft(event.target.value)
+          setError(null)
+        }}
+        maxLength={MAX_NAME_LENGTH}
+        aria-label="Display name"
+        aria-invalid={error !== null}
+        aria-describedby={error ? errorId : undefined}
+      />
+
+      {error ? (
+        <p id={errorId} role="alert" className="text-destructive text-xs">
+          {error}
         </p>
+      ) : null}
 
-        <input
-          // The dialog exists only to edit this field, so focus belongs here.
-          autoFocus
-          value={draft}
-          onChange={(event) => {
-            setDraft(event.target.value)
-            setError(null)
-          }}
-          maxLength={MAX_NAME_LENGTH}
-          aria-label="Display name"
-          aria-invalid={error !== null}
-          aria-describedby={error ? errorId : undefined}
-          className="rounded-md border border-line bg-surface-raised px-2 py-1.5 text-sm outline-none focus-visible:border-human"
-        />
-
-        {error ? (
-          <p id={errorId} role="alert" className="text-danger text-xs">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-3 py-1.5 text-ink-muted text-xs hover:text-ink"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-human px-3 py-1.5 font-medium text-canvas text-xs"
-          >
-            Save
-          </button>
-        </div>
-      </form>
-    </dialog>
+      <DialogFooter>
+        <DialogClose render={<Button variant="ghost">Cancel</Button>} />
+        <Button type="submit">Save</Button>
+      </DialogFooter>
+    </form>
   )
 }

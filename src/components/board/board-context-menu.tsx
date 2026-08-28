@@ -1,4 +1,13 @@
-import { useEffect, useRef } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import { EDGE_KINDS, type EdgeKind, SERVICE_KINDS, type ServiceKind } from "@/lib/graph/types"
 
 export type ContextMenuState =
@@ -17,136 +26,80 @@ interface BoardContextMenuProps {
 }
 
 /**
- * The board's right-click menu. A document-level listener closes it on any
- * press outside the menu or on Escape; every item is a real button, so focus
- * and keyboard activation come from the platform.
+ * The board's right-click menu. React Flow reports the click and its target,
+ * so the menu runs as a controlled Base UI menu anchored to the pointer
+ * position instead of to a trigger element. The primitive supplies focus,
+ * arrow-key navigation, typeahead, and dismissal.
  */
 export function BoardContextMenu(props: BoardContextMenuProps) {
   const { menu, onClose } = props
-  const menuRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    function onPointerDown(event: PointerEvent) {
-      if (!menuRef.current?.contains(event.target as globalThis.Node)) onClose()
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose()
-    }
-
-    document.addEventListener("pointerdown", onPointerDown)
-    document.addEventListener("keydown", onKeyDown)
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown)
-      document.removeEventListener("keydown", onKeyDown)
-    }
-  }, [onClose])
+  const anchor = {
+    getBoundingClientRect: () =>
+      DOMRect.fromRect({ x: menu.screen.x, y: menu.screen.y, width: 0, height: 0 }),
+  }
 
   return (
-    <div
-      ref={menuRef}
-      role="menu"
-      aria-label="Board actions"
-      className="fixed z-50 min-w-44 rounded-md border border-line bg-surface-raised py-1 shadow-xl"
-      style={{ left: menu.screen.x, top: menu.screen.y }}
+    <DropdownMenu
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose()
+      }}
     >
-      {menu.target === "pane" ? (
-        <>
-          <MenuHeading>Add here</MenuHeading>
-          {SERVICE_KINDS.map((kind) => (
-            <MenuItem
-              key={kind}
-              onSelect={() => {
-                props.onAddService({ kind, position: menu.flow })
-                onClose()
-              }}
+      <DropdownMenuContent
+        anchor={anchor}
+        align="start"
+        side="right"
+        sideOffset={2}
+        className="min-w-44"
+        aria-label="Board actions"
+      >
+        {menu.target === "pane" ? (
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Add here</DropdownMenuLabel>
+            {SERVICE_KINDS.map((kind) => (
+              <DropdownMenuItem
+                key={kind}
+                onClick={() => props.onAddService({ kind, position: menu.flow })}
+              >
+                {`New ${kind}`}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+        ) : null}
+
+        {menu.target === "node" ? (
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{menu.label}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => props.onEditNode(menu.nodeId)}>Edit…</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => props.onDeleteNode(menu.nodeId)}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        ) : null}
+
+        {menu.target === "edge" ? (
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Dependency</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={menu.kind}
+              onValueChange={(value) =>
+                props.onSetEdgeKind({ edgeId: menu.edgeId, kind: value as EdgeKind })
+              }
             >
-              {`New ${kind}`}
-            </MenuItem>
-          ))}
-        </>
-      ) : null}
-
-      {menu.target === "node" ? (
-        <>
-          <MenuHeading>{menu.label}</MenuHeading>
-          <MenuItem
-            onSelect={() => {
-              props.onEditNode(menu.nodeId)
-              onClose()
-            }}
-          >
-            Edit…
-          </MenuItem>
-          <MenuItem
-            tone="danger"
-            onSelect={() => {
-              props.onDeleteNode(menu.nodeId)
-              onClose()
-            }}
-          >
-            Delete
-          </MenuItem>
-        </>
-      ) : null}
-
-      {menu.target === "edge" ? (
-        <>
-          <MenuHeading>Dependency</MenuHeading>
-          {EDGE_KINDS.map((kind) => (
-            <MenuItem
-              key={kind}
-              active={kind === menu.kind}
-              onSelect={() => {
-                props.onSetEdgeKind({ edgeId: menu.edgeId, kind })
-                onClose()
-              }}
-            >
-              {kind}
-            </MenuItem>
-          ))}
-          <MenuItem
-            tone="danger"
-            onSelect={() => {
-              props.onDeleteEdge(menu.edgeId)
-              onClose()
-            }}
-          >
-            Delete
-          </MenuItem>
-        </>
-      ) : null}
-    </div>
-  )
-}
-
-function MenuHeading(props: { children: string }) {
-  return (
-    <p className="px-3 py-1 font-medium text-[10px] text-ink-muted uppercase tracking-wide">
-      {props.children}
-    </p>
-  )
-}
-
-interface MenuItemProps {
-  children: string
-  onSelect: () => void
-  tone?: "danger"
-  active?: boolean
-}
-
-function MenuItem(props: MenuItemProps) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={props.onSelect}
-      className={[
-        "block w-full px-3 py-1.5 text-left text-xs hover:bg-surface",
-        props.tone === "danger" ? "text-danger" : "text-ink",
-        props.active ? "font-semibold" : "",
-      ].join(" ")}
-    >
-      {props.active ? `• ${props.children}` : props.children}
-    </button>
+              {EDGE_KINDS.map((kind) => (
+                <DropdownMenuRadioItem key={kind} value={kind} closeOnClick>
+                  {kind}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={() => props.onDeleteEdge(menu.edgeId)}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

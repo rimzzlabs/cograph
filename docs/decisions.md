@@ -307,6 +307,29 @@ theme is part of the product).
 
 ---
 
+## 016 — A stacked avatar row with a real idle signal
+
+**Date:** 2026-08-28
+
+The topbar listed every participant as a full-width chip, which does not scale past a few members.
+The topbar now shows a stack of circle avatars — initials on the participant colour, a bot glyph for
+an agent — capped at 5, with an overflow bubble that counts the rest. A click on the stack opens a
+popover with the full member list. Only the member's own row carries an edit control, wired to the
+existing name dialog.
+
+An online member wears a ring. A member idle for more than 1 minute loses it. Yjs awareness cannot
+supply that signal on its own: y-websocket renews awareness for every open tab, so an idle tab never
+expires. Each client therefore publishes its own `lastActiveAt` into awareness — stamped on pointer,
+key, and wheel input, throttled to one write per 10 seconds — and every reader derives the online
+state locally. The agent's seat gets its stamp from each tool call. A 15-second timer re-checks the
+rings, so they expire without any local input.
+
+**Rejected:** treating awareness presence as the online signal (it never goes idle); publishing a
+computed `online` boolean (it would go stale the moment the publisher goes idle — the reader must
+own the clock).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

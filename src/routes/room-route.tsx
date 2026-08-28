@@ -7,6 +7,7 @@ import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
+import { useLastActiveAt } from "@/lib/presence/use-last-active"
 import { type AgentPresence, publishCursor, usePresence } from "@/lib/presence/use-presence"
 import { useBoardConnection, useBoardSnapshot, useConnectionStatus } from "@/lib/yjs/use-board"
 import { agentIdentityFor, useAgentStore } from "@/stores/agent-store"
@@ -26,22 +27,43 @@ export function RoomRoute() {
 
   const agentActive = useAgentStore((state) => state.active)
   const agentCursor = useAgentStore((state) => state.cursor)
+  const agentLastActiveAt = useAgentStore((state) => state.lastActiveAt)
+
+  const lastActiveAt = useLastActiveAt()
 
   // The local agent earns its seat on the first tool call, and rides this
   // client's awareness state so remote peers see it too.
   const localAgent = useMemo<AgentPresence | null>(
-    () => (agentActive ? { participant: agentIdentityFor(me), cursor: agentCursor } : null),
-    [agentActive, agentCursor, me],
+    () =>
+      agentActive
+        ? {
+            participant: agentIdentityFor(me),
+            cursor: agentCursor,
+            lastActiveAt: agentLastActiveAt,
+          }
+        : null,
+    [agentActive, agentCursor, agentLastActiveAt, me],
   )
 
-  const others = usePresence({ board, me, selection: selectedNodeIds, agent: localAgent })
+  const others = usePresence({
+    board,
+    me,
+    selection: selectedNodeIds,
+    lastActiveAt,
+    agent: localAgent,
+  })
 
   const roster = useMemo(
     () =>
       localAgent
         ? [
             ...others,
-            { participant: localAgent.participant, selection: [], cursor: localAgent.cursor },
+            {
+              participant: localAgent.participant,
+              selection: [],
+              cursor: localAgent.cursor,
+              lastActiveAt: localAgent.lastActiveAt,
+            },
           ]
         : others,
     [others, localAgent],
@@ -84,6 +106,7 @@ export function RoomRoute() {
         </div>
         <ParticipantList
           me={me}
+          meLastActiveAt={lastActiveAt}
           others={roster}
           colors={colors}
           status={status}

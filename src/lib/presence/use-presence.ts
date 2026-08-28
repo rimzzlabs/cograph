@@ -6,17 +6,22 @@ export interface PresenceState {
   participant: Participant
   selection: string[]
   cursor: { x: number; y: number } | null
+  /** Unix time of the participant's last real input; null for old clients. */
+  lastActiveAt: number | null
 }
 
 export interface AgentPresence {
   participant: Participant
   cursor: { x: number; y: number } | null
+  lastActiveAt: number | null
 }
 
 interface UsePresenceParams {
   board: BoardConnection | null
   me: Participant
   selection: string[]
+  /** Unix time of the local person's last real input. */
+  lastActiveAt: number
   /** The local agent, once it has acted. Rides this client's awareness state. */
   agent: AgentPresence | null
 }
@@ -33,7 +38,7 @@ interface UsePresenceParams {
  * participant of its own — a seat, a colour, and a cursor.
  */
 export function usePresence(params: UsePresenceParams) {
-  const { board, me, selection, agent } = params
+  const { board, me, selection, lastActiveAt, agent } = params
   const [others, setOthers] = useState<PresenceState[]>([])
 
   useEffect(() => {
@@ -42,8 +47,10 @@ export function usePresence(params: UsePresenceParams) {
     const { awareness } = board.provider
     awareness.setLocalStateField("participant", me)
     awareness.setLocalStateField("selection", selection)
+    awareness.setLocalStateField("lastActiveAt", lastActiveAt)
     awareness.setLocalStateField("agentParticipant", agent?.participant ?? null)
     awareness.setLocalStateField("agentCursor", agent?.cursor ?? null)
+    awareness.setLocalStateField("agentLastActiveAt", agent?.lastActiveAt ?? null)
 
     function readOthers() {
       const newest = new Map<string, { state: PresenceState; lastUpdated: number }>()
@@ -60,6 +67,7 @@ export function usePresence(params: UsePresenceParams) {
         const value = state as Partial<PresenceState> & {
           agentParticipant?: Participant | null
           agentCursor?: { x: number; y: number } | null
+          agentLastActiveAt?: number | null
         }
         const lastUpdated = awareness.meta.get(clientId)?.lastUpdated ?? 0
 
@@ -70,6 +78,7 @@ export function usePresence(params: UsePresenceParams) {
             participant: value.participant,
             selection: value.selection ?? [],
             cursor: value.cursor ?? null,
+            lastActiveAt: value.lastActiveAt ?? null,
           })
         }
 
@@ -78,6 +87,7 @@ export function usePresence(params: UsePresenceParams) {
             participant: value.agentParticipant,
             selection: [],
             cursor: value.agentCursor ?? null,
+            lastActiveAt: value.agentLastActiveAt ?? null,
           })
         }
       }
@@ -93,7 +103,7 @@ export function usePresence(params: UsePresenceParams) {
     readOthers()
     awareness.on("change", readOthers)
     return () => awareness.off("change", readOthers)
-  }, [board, me, selection, agent])
+  }, [board, me, selection, lastActiveAt, agent])
 
   return others
 }

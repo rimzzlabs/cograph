@@ -9,6 +9,8 @@ interface AgentActivityState {
   /** Board coordinates of the last place a tool call touched. */
   cursor: { x: number; y: number } | null
   lastToolName: string | null
+  /** Unix time of the last tool call. The agent's activity signal. */
+  lastActiveAt: number | null
   markToolCall: (params: { tool: string; position?: { x: number; y: number } }) => void
   /** Point the agent's cursor at the place its current tool call is working. */
   moveCursor: (position: { x: number; y: number }) => void
@@ -19,10 +21,12 @@ const baseStore = create<AgentActivityState>()(
     active: false,
     cursor: null,
     lastToolName: null,
+    lastActiveAt: null,
     markToolCall: (params) =>
       set((state) => {
         state.active = true
         state.lastToolName = params.tool
+        state.lastActiveAt = Date.now()
         if (params.position) state.cursor = params.position
       }),
     moveCursor: (position) =>

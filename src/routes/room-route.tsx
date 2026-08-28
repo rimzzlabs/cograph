@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState } from "react"
-import { useParams } from "react-router"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { useParams, useSearchParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
 import type { CursorMarker } from "@/components/board/board-cursor-layer"
 import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
+import { ShareViewLink } from "@/components/presence/share-view-link"
+import { Badge } from "@/components/ui/badge"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
 import { useLastActiveAt } from "@/lib/presence/use-last-active"
@@ -23,7 +25,16 @@ export function RoomRoute() {
 
   const me = useSessionStore((state) => state.me)
   const setName = useSessionStore((state) => state.setName)
+  const setRole = useSessionStore((state) => state.setRole)
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
+
+  // The role rides the URL: ?role=viewer opens the room read-only, and the
+  // agent's tool surface shrinks with it. Dropping the param restores editing.
+  const [searchParams] = useSearchParams()
+  const isViewerLink = searchParams.get("role") === "viewer"
+  useEffect(() => {
+    setRole(isViewerLink ? "viewer" : "editor")
+  }, [isViewerLink, setRole])
 
   const agentActive = useAgentStore((state) => state.active)
   const agentCursor = useAgentStore((state) => state.cursor)
@@ -98,20 +109,26 @@ export function RoomRoute() {
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-line border-b bg-surface px-4 py-2">
-        <div>
-          <h1 className="font-semibold text-ink text-sm">Cograph</h1>
-          <p className="text-ink-muted text-xs">
-            room <code className="font-mono">{roomId}</code>
-          </p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h1 className="font-semibold text-ink text-sm">Cograph</h1>
+            <p className="text-ink-muted text-xs">
+              room <code className="font-mono">{roomId}</code>
+            </p>
+          </div>
+          {me.role === "viewer" ? <Badge variant="secondary">read-only</Badge> : null}
         </div>
-        <ParticipantList
-          me={me}
-          meLastActiveAt={lastActiveAt}
-          others={roster}
-          colors={colors}
-          status={status}
-          onEditName={() => setNameDialogOpen(true)}
-        />
+        <div className="flex items-center gap-2">
+          <ShareViewLink roomId={roomId} />
+          <ParticipantList
+            me={me}
+            meLastActiveAt={lastActiveAt}
+            others={roster}
+            colors={colors}
+            status={status}
+            onEditName={() => setNameDialogOpen(true)}
+          />
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1">

@@ -1,7 +1,10 @@
+import { useMemo, useState } from "react"
 import { useParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
 import { ParticipantList } from "@/components/presence/participant-list"
+import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
+import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
 import { usePresence } from "@/lib/presence/use-presence"
 import { useBoardConnection, useBoardSnapshot, useConnectionStatus } from "@/lib/yjs/use-board"
@@ -16,8 +19,14 @@ export function RoomRoute() {
   const status = useConnectionStatus(board)
 
   const me = useSessionStore((state) => state.me)
+  const setName = useSessionStore((state) => state.setName)
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
   const others = usePresence({ board, me, selection: selectedNodeIds })
+
+  const peers = useMemo(() => others.map((other) => other.participant), [others])
+  const colors = useParticipantColors({ me, peers })
+
+  const [nameDialogOpen, setNameDialogOpen] = useState(false)
 
   useBoardTools({ board, snapshot })
 
@@ -30,7 +39,13 @@ export function RoomRoute() {
             room <code className="font-mono">{roomId}</code>
           </p>
         </div>
-        <ParticipantList me={me} others={others} status={status} />
+        <ParticipantList
+          me={me}
+          others={others}
+          colors={colors}
+          status={status}
+          onEditName={() => setNameDialogOpen(true)}
+        />
       </header>
 
       <div className="flex min-h-0 flex-1">
@@ -43,6 +58,16 @@ export function RoomRoute() {
         </main>
         <ToolInspector />
       </div>
+
+      <ParticipantNameDialog
+        open={nameDialogOpen}
+        currentName={me.name}
+        onClose={() => setNameDialogOpen(false)}
+        onSubmit={(name) => {
+          setName(name)
+          setNameDialogOpen(false)
+        }}
+      />
     </div>
   )
 }

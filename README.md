@@ -55,8 +55,11 @@ pnpm install
 pnpm dev
 ```
 
-Open the printed URL. The app redirects to `/r/demo`. Open the same URL in a second window to see
-multiplayer sync.
+Open the printed URL. The app redirects to `/r/demo`.
+
+To see more than one person, open the same URL in an incognito window or in a second browser. A
+second tab in the same browser shows the same person, because one browser profile holds one
+identity.
 
 To see the agent tools, use Chrome 149 or later with `chrome://flags/#enable-webmcp-testing`
 enabled, or open the app in the ChatGPT in-app browser.
@@ -69,6 +72,7 @@ enabled, or open the app in the ChatGPT in-app browser.
 | `pnpm build`      | Type-check and build                |
 | `pnpm deploy`     | Build and deploy to Cloudflare      |
 | `pnpm typecheck`  | Type-check only                     |
+| `pnpm test:color` | Check the participant colour rules  |
 | `pnpm lint`       | Biome check                         |
 | `pnpm lint:fix`   | Biome check and write fixes         |
 | `pnpm format`     | Prettier on Markdown and YAML       |

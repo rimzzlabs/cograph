@@ -154,6 +154,65 @@ The house scaffold never runs `git init`. The repository was initialised separat
 
 ---
 
+## 011 — Propose a stable presence identity for each browser profile
+
+**Date:** 2026-08-28
+
+The current code makes a new identity on each page load. It also names every person "You". We wrote
+RFC #1 to fix this.
+
+The proposal keeps the identity in `localStorage`. That store is scoped to one browser profile. Two
+tabs therefore show one person. An incognito window or a second browser shows a different person.
+The read step groups the awareness states by participant id, because each tab opens its own
+connection.
+
+The user sets a display name. A hash of the name gives a hue. The lightness and the chroma stay
+fixed, so every colour is legible on the dark canvas. When two participants share a name, only the
+colour of the peer moves.
+
+All five open questions are answered:
+
+1. Use OKLCH, not hex.
+2. Do not block the first load. Show a temporary name in the header. A dialog changes it.
+3. Apply a minimum hue distance of 30 degrees across every present participant.
+4. One identity shows one cursor. The most recent session wins.
+5. An agent uses the same colour rule. It gets no reserved colour.
+
+Answer 3 costs stability. A guaranteed hue distance and a colour that never moves cannot both hold.
+The hue of a peer can move when another participant joins. The colour of the local user never moves.
+
+Status: implemented, and verified in a browser on 2026-08-28. See entry 012 for a correction to the
+colour rule.
+
+**Consequence for the demo:** two tabs in one browser will show one person. The video must use an
+incognito window or a second browser to show multiplayer use.
+
+See: https://github.com/rimzzlabs/cograph/issues/1
+
+---
+
+## 012 — Anchor the hue grid on the local user
+
+**Date:** 2026-08-28
+
+We implemented RFC #1. One part of the agreed design was wrong, and we corrected it.
+
+The RFC said that each peer starts at the hue of its name, and then steps by 30 degrees until it
+clears the placed hues. That rule does not give the guarantee. Each participant steps on its own
+grid, so twelve arbitrary start hues can still land closer than 30 degrees. A check with 12
+participants produced a closest pair of 21 degrees.
+
+The fix is one shared grid. The local user takes the exact hue of the local name. That hue anchors
+12 slots, spaced 30 degrees apart. Each peer takes the slot nearest the hue of its name, and probes
+forward when the slot is taken. A check with 12 participants now produces exactly 30 degrees.
+
+The local user still keeps the exact hue of their own name, so the original rule holds.
+
+`scripts/color-check.ts` holds the check. Run it with `pnpm test:color`. It covers the collision
+rule, the spacing guarantee, the order independence, and the behaviour above 12 participants.
+
+---
+
 ## Open risks
 
 - **WebMCP is unverified in a browser.** `src/lib/mcp/types.ts` declares `document.modelContext`

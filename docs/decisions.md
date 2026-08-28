@@ -242,6 +242,26 @@ them assert the agent's seat and the engine-reported tool count from the page it
 
 ---
 
+## 014 — Give humans an editing surface
+
+**Date:** 2026-08-28
+
+Manual testing in Chrome surfaced the gap at once: the agent had six tools, and a person had none.
+There was no way to add a node without the console.
+
+The board now has a right-click menu. On the canvas it adds a service of any kind at the clicked
+position. On a node it opens edit and delete. On an edge it changes the kind or deletes. A toolbar
+button covers touch and keyboard users, and a native dialog edits the label, the kind, and the note.
+Backspace deletion now writes through to the shared document, which it silently did not before.
+
+Every path writes through the same Yjs mutations that the agent tools use. A human edit and an agent
+edit are the same operation with a different author.
+
+A viewer role gets no menu, no toolbar, and no keyboard deletion — the same rule that hides the
+agent's mutating tools.
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

@@ -1,7 +1,21 @@
 /**
  * Ambient types for the WebMCP browser API. The platform ships no lib.dom types
- * for `document.modelContext` yet, so the shape here follows the WebMCP
- * explainer: https://github.com/webmachinelearning/webmcp
+ * for `document.modelContext` yet.
+ *
+ * Verified against Chrome for Testing 152.0.7977.64 with
+ * `--enable-webmcp-testing` (headless, over CDP) on 2026-08-28:
+ *
+ * - The entry point is `document.modelContext`, an EventTarget named
+ *   `ModelContext`. `navigator.modelContext` does not exist.
+ * - A tool's `execute` callback receives parsed object args and NO second
+ *   argument. It returns a `{ content, isError? }` object.
+ * - The host side is string-typed: `executeTool` takes the args as a JSON
+ *   string and resolves to the result as a JSON string. `RegisteredTool`
+ *   carries `inputSchema` as a serialized string.
+ * - `registerTool` rejects on a duplicate name. The `toolchange` event is a
+ *   plain `Event` with no payload; re-read `getTools()` after it fires.
+ * - The engine does not validate args against the schema. A structured
+ *   `isError` result is the only feedback channel the agent gets.
  */
 
 export interface JsonSchema {
@@ -40,9 +54,13 @@ export interface ToolDescriptor {
   description: string
   inputSchema: JsonSchema
   annotations?: ToolAnnotations
+  /**
+   * Chrome 152 calls this with args only. The options parameter is kept
+   * optional for the explainer's per-call AbortSignal, which is not shipped.
+   */
   execute: (
     args: Record<string, unknown>,
-    options: ToolExecuteOptions,
+    options?: ToolExecuteOptions,
   ) => ToolResult | Promise<ToolResult>
 }
 
@@ -55,19 +73,22 @@ export interface RegisterToolOptions {
 export interface RegisteredTool {
   name: string
   description: string
-  inputSchema: JsonSchema
+  /** Serialized JSON schema. The engine returns a string, not an object. */
+  inputSchema: string
   annotations?: ToolAnnotations
+  title?: string
   origin?: string
 }
 
 export interface ModelContext extends EventTarget {
   registerTool: (tool: ToolDescriptor, options?: RegisterToolOptions) => Promise<void>
   getTools: (options?: { fromOrigins?: string[] }) => Promise<RegisteredTool[]>
+  /** Args in and result out are JSON strings on the host side. */
   executeTool: (
     tool: RegisteredTool,
-    args: Record<string, unknown>,
+    args: string,
     options?: { signal?: AbortSignal },
-  ) => Promise<ToolResult>
+  ) => Promise<string>
 }
 
 declare global {

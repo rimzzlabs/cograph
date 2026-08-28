@@ -18,7 +18,7 @@ export interface AgentToolSpec {
   exposedTo?: string[]
   execute: (
     args: Record<string, unknown>,
-    options: ToolExecuteOptions,
+    options?: ToolExecuteOptions,
   ) => ToolResult | Promise<ToolResult>
 }
 
@@ -98,9 +98,11 @@ export function useAgentTool(spec: AgentToolSpec | null) {
           registeredAt: Date.now(),
         })
       })
-      .catch(() => {
-        // Registration is gated by the `tools` Permissions Policy. A refusal is a
-        // normal state for this page, not a crash: the board still works by hand.
+      .catch((error: unknown) => {
+        // A policy refusal is a normal state for this page: the board still
+        // works by hand. A duplicate name is a programming error, so it is
+        // worth a warning while staying non-fatal.
+        console.warn(`WebMCP: could not register "${declaration.name}"`, error)
       })
 
     return () => {

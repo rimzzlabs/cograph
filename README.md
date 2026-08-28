@@ -67,6 +67,10 @@ enabled, or open the app in the ChatGPT in-app browser. Brave does not ship the 
 The first tool call gives the agent a seat: a participant chip, a colour from the same name rule
 that people use, and a cursor that moves to the node each tool call touches.
 
+To edit by hand: right-click the canvas to add a service, right-click a node or an edge for edit and
+delete, double-click a node to open the editor, and drag between handles to connect. Backspace
+deletes the selection.
+
 ## Commands
 
 | Command            | What it does                        |

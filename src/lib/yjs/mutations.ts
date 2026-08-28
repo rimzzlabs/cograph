@@ -90,3 +90,12 @@ export function removeEdge(board: BoardConnection, id: string) {
     board.edges.delete(id)
   }, LOCAL_ORIGIN)
 }
+
+export function updateEdgeKind(params: { board: BoardConnection; id: string; kind: EdgeKind }) {
+  const existing = params.board.edges.get(params.id)
+  if (!existing) return
+
+  params.board.doc.transact(() => {
+    params.board.edges.set(params.id, { ...existing, kind: params.kind })
+  }, LOCAL_ORIGIN)
+}

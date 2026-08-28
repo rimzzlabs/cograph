@@ -213,15 +213,38 @@ rule, the spacing guarantee, the order independence, and the behaviour above 12 
 
 ---
 
+## 013 — WebMCP is verified against Chrome, and the agent has a seat
+
+**Date:** 2026-08-28
+
+We probed the real API headless, over CDP, against Chrome for Testing 152 with
+`--enable-webmcp-testing`. The entry point is `document.modelContext`, exactly as the explainer
+says. Our side of the boundary was already correct: the tool callback receives parsed object args
+and returns a `{ content, isError }` object.
+
+Two wire-format facts differ from our first types. `RegisteredTool.inputSchema` is a serialized JSON
+string, and `executeTool` takes a JSON string in and returns a JSON string out. The engine never
+validates args against the schema, so our structured error results are the only feedback an agent
+gets.
+
+**Brave 152 does not ship the API.** The strings are in the binary, but the supplement never
+installs, with every flag enabled. Use Chrome.
+
+The agent is now a visible participant. It does not open its own connection. It rides its human's
+awareness state as an `agentParticipant` field, and the read side lifts it into a seat of its own: a
+chip, the name-hash colour, and a cursor that moves to the node its tool call touched. The agent has
+no seat until its first call, so an idle page shows no phantom participant.
+
+`scripts/webmcp-check.mjs` proves the loop end to end: it serves the build, launches Chrome
+headless, and drives the board through the browser's own `executeTool`. 17 checks pass, and two of
+them assert the agent's seat and the engine-reported tool count from the page itself. Run it with
+`CHROME_BIN=<chrome> pnpm test:webmcp`.
+
+---
+
 ## Open risks
 
-- **WebMCP is unverified in a browser.** `src/lib/mcp/types.ts` declares `document.modelContext`
-  from the specification explainer. The code compiles. That proves nothing about Chrome. Test in
-  Chrome 149 or later with `chrome://flags/#enable-webmcp-testing`, and in the ChatGPT in-app
-  browser. `src/lib/mcp/use-agent-tool.ts` is the only file to change if the shipped API differs.
-- **Live cursors are not wired.** `publishCursor()` exists. Nothing calls it. This is the feature
-  that proves the tagline.
-- **No agent participant is created yet.** `Participant.kind` accepts `"agent"` and the chip renders
-  a badge. Nothing produces one.
+- **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The
+  challenge names ChatGPT's browser as a judging surface, and nothing here has touched it.
 - **The repository is private.** The submission needs a public repository with a license file at the
-  root.
+  root. Keep it private until near the deadline, then flip it.

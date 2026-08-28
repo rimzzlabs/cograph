@@ -1,13 +1,15 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
+import type { CursorMarker } from "@/components/board/board-cursor-layer"
 import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
-import { usePresence } from "@/lib/presence/use-presence"
+import { type AgentPresence, publishCursor, usePresence } from "@/lib/presence/use-presence"
 import { useBoardConnection, useBoardSnapshot, useConnectionStatus } from "@/lib/yjs/use-board"
+import { agentIdentityFor, useAgentStore } from "@/stores/agent-store"
 import { useSessionStore } from "@/stores/session-store"
 
 export function RoomRoute() {
@@ -21,10 +23,51 @@ export function RoomRoute() {
   const me = useSessionStore((state) => state.me)
   const setName = useSessionStore((state) => state.setName)
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
-  const others = usePresence({ board, me, selection: selectedNodeIds })
 
-  const peers = useMemo(() => others.map((other) => other.participant), [others])
+  const agentActive = useAgentStore((state) => state.active)
+  const agentCursor = useAgentStore((state) => state.cursor)
+
+  // The local agent earns its seat on the first tool call, and rides this
+  // client's awareness state so remote peers see it too.
+  const localAgent = useMemo<AgentPresence | null>(
+    () => (agentActive ? { participant: agentIdentityFor(me), cursor: agentCursor } : null),
+    [agentActive, agentCursor, me],
+  )
+
+  const others = usePresence({ board, me, selection: selectedNodeIds, agent: localAgent })
+
+  const roster = useMemo(
+    () =>
+      localAgent
+        ? [
+            ...others,
+            { participant: localAgent.participant, selection: [], cursor: localAgent.cursor },
+          ]
+        : others,
+    [others, localAgent],
+  )
+
+  const peers = useMemo(() => roster.map((entry) => entry.participant), [roster])
   const colors = useParticipantColors({ me, peers })
+
+  const cursors = useMemo<CursorMarker[]>(
+    () =>
+      roster
+        .filter((entry) => entry.cursor !== null)
+        .map((entry) => ({
+          id: entry.participant.id,
+          name: entry.participant.name,
+          kind: entry.participant.kind,
+          color: colors.get(entry.participant.id) ?? "oklch(0.74 0.15 240)",
+          cursor: entry.cursor as { x: number; y: number },
+        })),
+    [roster, colors],
+  )
+
+  const onCursorMove = useCallback(
+    (position: { x: number; y: number } | null) => publishCursor(board, position),
+    [board],
+  )
 
   const [nameDialogOpen, setNameDialogOpen] = useState(false)
 
@@ -41,7 +84,7 @@ export function RoomRoute() {
         </div>
         <ParticipantList
           me={me}
-          others={others}
+          others={roster}
           colors={colors}
           status={status}
           onEditName={() => setNameDialogOpen(true)}
@@ -51,7 +94,12 @@ export function RoomRoute() {
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1">
           {board ? (
-            <BoardCanvas board={board} snapshot={snapshot} />
+            <BoardCanvas
+              board={board}
+              snapshot={snapshot}
+              cursors={cursors}
+              onCursorMove={onCursorMove}
+            />
           ) : (
             <p className="p-4 text-ink-muted text-sm">Connecting to the board…</p>
           )}

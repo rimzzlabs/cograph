@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useAgentStore } from "@/stores/agent-store"
 import { useToolRegistryStore } from "@/stores/tool-registry-store"
 import {
   errorResult,
@@ -77,6 +78,8 @@ export function useAgentTool(spec: AgentToolSpec | null) {
             if (!current) return errorResult("This tool is no longer available.")
 
             const result = await current.execute(args, options)
+            // A tool call is always the agent acting; give it its seat.
+            useAgentStore.getState().markToolCall({ tool: declaration.name })
             recordCall({
               id: crypto.randomUUID(),
               toolName: declaration.name,

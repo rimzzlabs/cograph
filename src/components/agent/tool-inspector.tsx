@@ -1,6 +1,37 @@
-import { isWebMcpAvailable } from "@/lib/mcp/types"
+import { useEffect, useState } from "react"
+import { getModelContext, isWebMcpAvailable } from "@/lib/mcp/types"
 import { cn } from "@/lib/utils"
 import { useToolRegistryStore } from "@/stores/tool-registry-store"
+
+/**
+ * The count the browser engine itself reports, refreshed on every real
+ * `toolchange` event. It proves the panel mirrors the engine, not only our
+ * own bookkeeping.
+ */
+function useEngineToolCount() {
+  const [count, setCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    const modelContext = getModelContext()
+    if (!modelContext) return
+
+    let cancelled = false
+    const refresh = () => {
+      void modelContext.getTools().then((engineTools) => {
+        if (!cancelled) setCount(engineTools.length)
+      })
+    }
+
+    refresh()
+    modelContext.addEventListener("toolchange", refresh)
+    return () => {
+      cancelled = true
+      modelContext.removeEventListener("toolchange", refresh)
+    }
+  }, [])
+
+  return count
+}
 
 /**
  * The board's honesty panel: exactly the tools the agent can call right now.
@@ -11,6 +42,7 @@ export function ToolInspector() {
   const tools = useToolRegistryStore((state) => state.tools)
   const calls = useToolRegistryStore((state) => state.calls)
   const available = isWebMcpAvailable()
+  const engineCount = useEngineToolCount()
 
   return (
     <aside className="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-line border-l bg-surface p-4">
@@ -21,6 +53,12 @@ export function ToolInspector() {
             ? `${tools.length} tool${tools.length === 1 ? "" : "s"} callable right now.`
             : "WebMCP is not available in this browser. The board still works by hand."}
         </p>
+        {engineCount !== null ? (
+          <p className="mt-0.5 text-ink-muted text-xs">
+            The browser engine reports {engineCount} registered tool
+            {engineCount === 1 ? "" : "s"}.
+          </p>
+        ) : null}
       </header>
 
       <ul className="flex flex-col gap-2">

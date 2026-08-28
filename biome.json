@@ -1,11 +1,16 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "includes": [
       "**/*.ts",
       "**/*.tsx",
       "**/*.js",
+      "**/*.mjs",
       "**/*.jsx",
       "**/*.json",
       "**/*.jsonc",
@@ -17,7 +22,9 @@
     ]
   },
   "css": {
-    "parser": { "tailwindDirectives": true }
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
   "formatter": {
     "enabled": true,
@@ -37,7 +44,9 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      "a11y": { "preset": "recommended" },
+      "a11y": {
+        "preset": "recommended"
+      },
       "correctness": {
         "useExhaustiveDependencies": "warn",
         "noUnusedImports": "error",
@@ -56,7 +65,13 @@
   "overrides": [
     {
       "includes": ["vite.config.ts", "worker/index.ts"],
-      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
     }
   ]
 }

@@ -456,6 +456,28 @@ is rarely empty).
 
 ---
 
+## 022 — One selection writer, and an idempotent store
+
+**Date:** 2026-08-29
+
+A multi-select on the canvas crashed with React's "Maximum update depth exceeded".
+
+The cause was two writers on one piece of state. Entry 020 made `onNodesChange` apply select
+changes into the session store. The `onSelectionChange` prop stayed as a safety net, and it is not
+one: React Flow fires it from an effect whenever its derived selection arrays change identity.
+Every store write re-syncs the controlled props, which changes those identities, which fires the
+echo, which wrote the store again. `setSelection` assigned fresh arrays unconditionally, so the
+cycle never reached a fixed point. A single click survived only because React Flow's
+`checkEquality` kept node references stable enough to calm the effect. A multi-select did not.
+
+Two changes, and each alone breaks the loop. `onSelectionChange` is removed — select changes in
+`onNodesChange` and `onEdgesChange` are the single writer. And `setSelection` now bails out when
+the incoming ids equal the current ids. The compare ignores order on purpose: the store keeps
+click order, which `connect_selected_services` reads as direction, and React Flow echoes the same
+set in document order.
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

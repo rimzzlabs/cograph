@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useAgentStore } from "@/stores/agent-store"
 import { useToolRegistryStore } from "@/stores/tool-registry-store"
 import {
   errorResult,
@@ -18,7 +19,7 @@ export interface AgentToolSpec {
   exposedTo?: string[]
   execute: (
     args: Record<string, unknown>,
-    options: ToolExecuteOptions,
+    options?: ToolExecuteOptions,
   ) => ToolResult | Promise<ToolResult>
 }
 
@@ -77,6 +78,8 @@ export function useAgentTool(spec: AgentToolSpec | null) {
             if (!current) return errorResult("This tool is no longer available.")
 
             const result = await current.execute(args, options)
+            // A tool call is always the agent acting; give it its seat.
+            useAgentStore.getState().markToolCall({ tool: declaration.name })
             recordCall({
               id: crypto.randomUUID(),
               toolName: declaration.name,
@@ -98,9 +101,11 @@ export function useAgentTool(spec: AgentToolSpec | null) {
           registeredAt: Date.now(),
         })
       })
-      .catch(() => {
-        // Registration is gated by the `tools` Permissions Policy. A refusal is a
-        // normal state for this page, not a crash: the board still works by hand.
+      .catch((error: unknown) => {
+        // A policy refusal is a normal state for this page: the board still
+        // works by hand. A duplicate name is a programming error, so it is
+        // worth a warning while staying non-fatal.
+        console.warn(`WebMCP: could not register "${declaration.name}"`, error)
       })
 
     return () => {

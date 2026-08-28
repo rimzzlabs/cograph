@@ -62,21 +62,29 @@ second tab in the same browser shows the same person, because one browser profil
 identity.
 
 To see the agent tools, use Chrome 149 or later with `chrome://flags/#enable-webmcp-testing`
-enabled, or open the app in the ChatGPT in-app browser.
+enabled, or open the app in the ChatGPT in-app browser. Brave does not ship the API, with any flag.
+
+The first tool call gives the agent a seat: a participant chip, a colour from the same name rule
+that people use, and a cursor that moves to the node each tool call touches.
+
+To edit by hand: right-click the canvas to add a service, right-click a node or an edge for edit and
+delete, double-click a node to open the editor, and drag between handles to connect. Backspace
+deletes the selection.
 
 ## Commands
 
-| Command           | What it does                        |
-| ----------------- | ----------------------------------- |
-| `pnpm dev`        | Start Vite and the Worker           |
-| `pnpm build`      | Type-check and build                |
-| `pnpm deploy`     | Build and deploy to Cloudflare      |
-| `pnpm typecheck`  | Type-check only                     |
-| `pnpm test:color` | Check the participant colour rules  |
-| `pnpm lint`       | Biome check                         |
-| `pnpm lint:fix`   | Biome check and write fixes         |
-| `pnpm format`     | Prettier on Markdown and YAML       |
-| `pnpm cf-typegen` | Regenerate Cloudflare binding types |
+| Command            | What it does                        |
+| ------------------ | ----------------------------------- |
+| `pnpm dev`         | Start Vite and the Worker           |
+| `pnpm build`       | Type-check and build                |
+| `pnpm deploy`      | Build and deploy to Cloudflare      |
+| `pnpm typecheck`   | Type-check only                     |
+| `pnpm test:color`  | Check the participant colour rules  |
+| `pnpm test:webmcp` | Drive the tools through real Chrome |
+| `pnpm lint`        | Biome check                         |
+| `pnpm lint:fix`    | Biome check and write fixes         |
+| `pnpm format`      | Prettier on Markdown and YAML       |
+| `pnpm cf-typegen`  | Regenerate Cloudflare binding types |
 
 Run `pnpm cf-typegen` after you change `wrangler.jsonc`.
 

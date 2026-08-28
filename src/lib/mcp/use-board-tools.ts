@@ -2,6 +2,7 @@ import { findCycles, findDependencies, findDependents } from "@/lib/graph/traver
 import { EDGE_KINDS, type EdgeKind, SERVICE_KINDS, type ServiceKind } from "@/lib/graph/types"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
 import { addNode, connectNodes, removeNode, updateNode } from "@/lib/yjs/mutations"
+import { useAgentStore } from "@/stores/agent-store"
 import { canEdit, useSessionStore } from "@/stores/session-store"
 import { errorResult, textResult } from "./types"
 import { useAgentTool } from "./use-agent-tool"
@@ -34,6 +35,11 @@ export function useBoardTools(params: UseBoardToolsParams) {
       .trim()
       .toLowerCase()
     return snapshot.nodes.find((node) => node.data.label.toLowerCase() === wanted) ?? null
+  }
+
+  // The card is roughly 160 by 60 px; aim at its middle so the cursor sits on it.
+  function pointAgentAt(node: { position: { x: number; y: number } }) {
+    useAgentStore.getState().moveCursor({ x: node.position.x + 80, y: node.position.y + 30 })
   }
 
   function unknownService(name: unknown) {
@@ -92,6 +98,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
             const node = resolve(args.service)
             if (!node) return unknownService(args.service)
 
+            pointAgentAt(node)
             const affected = findDependents(snapshot, node.id)
             setHighlight([node.id, ...affected])
 
@@ -128,6 +135,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
             const node = resolve(args.service)
             if (!node) return unknownService(args.service)
 
+            pointAgentAt(node)
             const deps = findDependencies(snapshot, node.id)
             if (deps.length === 0) return textResult(`${node.data.label} depends on nothing.`)
 
@@ -185,6 +193,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
           execute: (args) => {
             const node = resolve(args.service)
             if (!node) return unknownService(args.service)
+            pointAgentAt(node)
             if (!node.data.note) return textResult(`${node.data.label} has no note.`)
             return textResult(`Note on ${node.data.label}: ${node.data.note}`)
           },
@@ -211,13 +220,14 @@ export function useBoardTools(params: UseBoardToolsParams) {
             if (!label) return errorResult("A service needs a non-empty label.")
             if (resolve(label)) return errorResult(`A service named "${label}" already exists.`)
 
-            addNode({
+            const node = addNode({
               board,
               label,
               kind: args.kind as ServiceKind,
               authorId: me.id,
               position: { x: Math.random() * 600 - 300, y: Math.random() * 400 - 200 },
             })
+            pointAgentAt(node)
             return textResult(`Added ${label}.`)
           },
         }
@@ -242,6 +252,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
             const target = selected[0]
             if (!target) return errorResult("Nothing is selected any more.")
 
+            pointAgentAt(target)
             updateNode({
               board,
               id: target.id,
@@ -271,6 +282,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
             const target = selected[0]
             if (!target) return errorResult("Nothing is selected any more.")
 
+            pointAgentAt(target)
             removeNode(board, target.id)
             return textResult(`Removed ${target.data.label}.`)
           },
@@ -296,6 +308,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
             if (!source || !target)
               return errorResult("The selection changed. Re-select two services.")
 
+            pointAgentAt(target)
             connectNodes({
               board,
               source: source.id,

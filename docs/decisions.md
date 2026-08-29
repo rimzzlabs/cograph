@@ -330,8 +330,6 @@ own the clock).
 
 ---
 
-<<<<<<< HEAD
-
 ## 017 — Recolour the theme: calm warm neutrals, no blue
 
 **Date:** 2026-08-29
@@ -653,6 +651,39 @@ it the browser default paints black on white. The text stays readable in both ca
 **Rejected:** server-side rendering of the real board (it needs the Durable Object and a Yjs
 snapshot per request, for a page that no human reads); a `noscript` block alone (a fetcher reads the
 shell, and most fetchers ignore `noscript`).
+
+---
+
+## 030 — A light theme, toggled by a lightbulb
+
+**Date:** 2026-08-29
+
+Decisions 015 and 017 rejected a light theme. The user reversed that call, so the app now ships
+both schemes.
+
+The palette structure makes this cheap. Every shadcn token aliases one of ten palette custom
+properties. The light values live in `@theme`, and one `.dark` block overrides the same ten
+properties. The hues do not move: warm stone neutrals, lavender primary, sage agent. Only lightness
+and chroma change, so the two schemes read as one product.
+
+Dark stays the default. A pre-paint script in `index.html` reads `cograph:theme` from
+`localStorage` and removes the `dark` class when the stored choice is `light`, so neither scheme
+flashes on load. The theme store owns the runtime side: the root class, the `theme-color` meta tag,
+and storage.
+
+The toggle sits in the top bar beside the participant stack. The icon is one static contrast
+glyph, the pattern shadcn uses: the icon never swaps with the scheme. The button is icon-only, so
+it carries an `aria-label` that names the scheme a click switches to.
+
+**Accepted trade-off:** participant identity colours keep lightness 0.74 and chroma 0.15, which
+were tuned for the dark canvas. On the light canvas they read softer. The hue-spacing guarantee
+and `pnpm test:color` do not change, so identity stays stable across both schemes.
+
+**Rejected:** a system-preference default (the product identity is the dark canvas, and decision
+015 stands as the default); the sun and moon icon pair (generic, and the user vetoed it); a
+lightbulb pair that swaps with the scheme (the user prefers one static glyph); persisting through
+the zustand persist middleware (the pre-paint script needs a plain string it can read in one
+line).
 
 ---
 

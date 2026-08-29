@@ -6,6 +6,7 @@ import type { CursorMarker } from "@/components/board/board-cursor-layer"
 import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
 import { ShareViewLink } from "@/components/presence/share-view-link"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { useBoardAnnouncements } from "@/lib/graph/use-board-announcements"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
@@ -132,6 +133,7 @@ export function RoomRoute() {
         </div>
         <div className="flex items-center gap-2">
           <ShareViewLink roomId={roomId} />
+          <ThemeToggle />
           <ParticipantList
             me={me}
             meLastActiveAt={lastActiveAt}

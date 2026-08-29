@@ -29,10 +29,15 @@ export default {
     }
 
     const item = ROOM_ITEM_PATH.exec(url.pathname)
-    if (item && request.method === "GET") {
-      const exists = await roomExists(item[1] as string, env)
-      if (!exists) return new Response("unknown room", { status: 404 })
-      return Response.json({ id: item[1] })
+    if (item) {
+      const roomId = item[1] as string
+      if (request.method === "GET") {
+        const exists = await roomExists(roomId, env)
+        if (!exists) return new Response("unknown room", { status: 404 })
+        return Response.json({ id: roomId })
+      }
+      if (request.method === "DELETE") return deleteRoom(roomId, env)
+      return new Response("method not allowed", { status: 405 })
     }
 
     const socket = ROOM_SOCKET_PATH.exec(url.pathname)
@@ -85,6 +90,24 @@ async function createRoom(request: Request, env: Env) {
     return Response.json({ error: result.error }, { status: CREATE_ERROR_STATUS[result.error] })
   }
   return Response.json({ room: result.room }, { status: 201 })
+}
+
+/**
+ * Deleting is open to every visitor — an accepted weakness of a system with
+ * no accounts, chosen over rooms that nobody can ever remove. The registry
+ * row goes first, then the board document is purged so the Durable Object's
+ * storage is freed as well.
+ */
+async function deleteRoom(roomId: string, env: Env) {
+  if (roomId === DEMO_ROOM_ID) {
+    return Response.json({ error: "reserved" }, { status: 403 })
+  }
+
+  const removed = await env.DIRECTORY.getByName("directory").deleteRoom(roomId)
+  if (!removed) return new Response("unknown room", { status: 404 })
+
+  await env.ROOM.get(env.ROOM.idFromName(roomId)).purge()
+  return new Response(null, { status: 204 })
 }
 
 /**

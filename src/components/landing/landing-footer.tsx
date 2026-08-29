@@ -27,8 +27,8 @@ const PROTOCOL_LINKS: FooterLink[] = [
     external: true,
   },
   { label: "All rooms", href: "/rooms" },
-  { label: "The demo room", href: "/r/demo" },
-  { label: "View-only link", href: "/r/demo?role=viewer" },
+  { label: "The demo room", href: "/rooms/demo" },
+  { label: "View-only link", href: "/rooms/demo?role=viewer" },
 ]
 
 function FooterColumn(props: { heading: string; links: FooterLink[] }) {

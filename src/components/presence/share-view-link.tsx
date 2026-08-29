@@ -21,7 +21,7 @@ export function ShareViewLink(props: ShareViewLinkProps) {
   }, [])
 
   async function copy() {
-    const url = new URL(`/r/${props.roomId}`, window.location.origin)
+    const url = new URL(`/rooms/${props.roomId}`, window.location.origin)
     url.searchParams.set("role", "viewer")
 
     try {

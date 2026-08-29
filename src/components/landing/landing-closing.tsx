@@ -11,7 +11,7 @@ export function LandingClosing() {
             The demo room is public. Bring your agent.
           </p>
           <Link
-            to="/r/demo"
+            to="/rooms/demo"
             className={cn(buttonVariants({ size: "lg" }), "landing-cta-glow cursor-pointer")}
           >
             Open the board

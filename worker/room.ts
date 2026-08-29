@@ -76,6 +76,22 @@ export class RoomDurableObject extends DurableObject<Env> {
     await this.dropAwarenessFor(ws)
   }
 
+  /**
+   * Deletes everything this room holds. The Worker calls this after the
+   * registry drops the room, so the document storage is freed too and the
+   * object can be evicted for good.
+   */
+  async purge() {
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer)
+      this.persistTimer = null
+    }
+    for (const ws of this.ctx.getWebSockets()) ws.close(1001, "room deleted")
+    await this.ctx.storage.deleteAll()
+    this.doc = null
+    this.awareness = null
+  }
+
   private async getDoc() {
     if (this.doc) return this.doc
 

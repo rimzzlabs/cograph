@@ -30,7 +30,7 @@ export function RoomsCreateForm(props: { directory: RoomsDirectory }) {
       setSubmitting(false)
       return
     }
-    navigate(`/r/${result.value.id}`)
+    navigate(`/rooms/${result.value.id}`)
   }
 
   if (blockedReason) {
@@ -40,7 +40,7 @@ export function RoomsCreateForm(props: { directory: RoomsDirectory }) {
   return (
     <form onSubmit={onSubmit} className="max-w-md">
       <Label htmlFor="room-name">Room name</Label>
-      <div className="mt-2 flex items-start gap-2">
+      <div className="mt-2 flex flex-col gap-2">
         <Input
           id="room-name"
           value={name}

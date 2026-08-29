@@ -23,7 +23,7 @@ export function LandingBoardFigure() {
       >
         <div className="flex items-center justify-between border-line border-b px-4 py-2.5">
           <span className="font-landing-display text-ink-muted text-xs">
-            /r/demo · simulated preview
+            /rooms/demo · simulated preview
           </span>
           <div className="flex items-center gap-2">
             <span className="flex items-center" aria-hidden="true">

@@ -112,6 +112,15 @@ export class RoomsDirectoryDurableObject extends DurableObject<Env> {
     return { ok: true, room: { id, name, createdAt } }
   }
 
+  /** Removes a room and frees its creator's slot. Returns false when the
+   *  room was not in the registry. */
+  async deleteRoom(id: string): Promise<boolean> {
+    const removed = this.ctx.storage.sql
+      .exec<IdRow>("DELETE FROM rooms WHERE id = ? RETURNING id", id)
+      .toArray()
+    return removed.length > 0
+  }
+
   async hasRoom(id: string): Promise<boolean> {
     const rows = this.ctx.storage.sql.exec<IdRow>("SELECT id FROM rooms WHERE id = ?", id).toArray()
     return rows.length > 0
@@ -121,6 +130,7 @@ export class RoomsDirectoryDurableObject extends DurableObject<Env> {
 function slugify(name: string) {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((part) => part.length > 0)
+    .join("-")
 }

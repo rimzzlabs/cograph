@@ -54,6 +54,16 @@ export async function createRoom(name: string): Promise<RoomsResult<RoomSummary>
   }
 }
 
+export async function deleteRoom(id: string): Promise<RoomsResult<null>> {
+  try {
+    const response = await fetch(`/api/rooms/${id}`, { method: "DELETE" })
+    if (!response.ok) return { ok: false, error: "The room was not deleted. Try again." }
+    return { ok: true, value: null }
+  } catch {
+    return { ok: false, error: "The room was not deleted. Check your connection." }
+  }
+}
+
 export async function roomExists(id: string, signal?: AbortSignal): Promise<RoomsResult<boolean>> {
   if (id === "demo") return { ok: true, value: true }
   try {

@@ -46,8 +46,8 @@ export function RoomRoute() {
       <main className="mx-auto w-full max-w-md px-6 py-16">
         <h1 className="font-semibold text-ink text-xl">This room does not exist</h1>
         <p className="mt-2 text-ink-muted text-sm leading-relaxed">
-          Nobody created <code className="font-mono">/r/{roomId}</code>. Pick a room from the list,
-          or create one there.
+          Nobody created <code className="font-mono">/rooms/{roomId}</code>. Pick a room from the
+          list, or create one there.
         </p>
         <Link to="/rooms" className={cn(buttonVariants(), "mt-6 cursor-pointer")}>
           Browse rooms

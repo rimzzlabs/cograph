@@ -134,6 +134,14 @@
     height: 100%;
   }
 
+  /* The landing page can carry wide content (the tool table scrolls in its
+     own container). Clip, not hidden: clip keeps position sticky and fixed
+     working for descendants, so the board routes are unaffected. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background font-sans text-foreground;
     overscroll-behavior: none;

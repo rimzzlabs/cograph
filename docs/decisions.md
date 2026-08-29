@@ -787,6 +787,27 @@ selection sits on another splits the keyboard user's reality in two).
 
 ---
 
+## 035 — Split the client bundle into vendor chunks
+
+**Date:** 2026-08-29
+
+The client shipped as one 762 kB chunk, and the build warned about it. A sourcemap analysis
+attributed the weight: react-dom 19%, Base UI 18%, react-router 12%, yjs and lib0 15%, React Flow
+and d3 13%, app code 5%.
+
+The build now cuts four vendor chunks through rolldown's `codeSplitting.groups`, scoped to the
+client environment because the Worker build must stay a single module: `react` (react, react-dom,
+react-router, scheduler), `canvas` (React Flow and d3), `sync` (yjs, lib0, y-websocket,
+y-protocols), and `primitives` (Base UI and floating-ui). The app chunk is 106 kB. Each vendor
+chunk changes on its own cadence, so a redeploy of app code re-downloads 33 kB gzipped, not 246.
+The largest chunk is 227 kB, and the size warning is gone.
+
+**Rejected:** replacing react-router with a 20-line `useSyncExternalStore` router. It built, all
+31 checks passed, and it saved 14 kB gzipped, but the user chose the library over a bespoke
+router. The saving is recorded here in case the trade ever reads differently.
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

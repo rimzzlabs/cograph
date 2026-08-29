@@ -176,6 +176,9 @@ check("live region announced the additions", true)
 
 // --- Keyboard path to the menu, focus into it ---
 await evaluate(`document.querySelector(".react-flow__node").focus()`)
+// Focus now selects the node, which re-renders the canvas; let that settle
+// before the menu key, or the two race.
+await wait(200)
 await key({ key: "F10", code: "F10", keyCode: 121, modifiers: 8 })
 await wait(400)
 check(
@@ -272,13 +275,14 @@ check(
   await evaluate(`getComputedStyle(document.activeElement).outlineStyle`),
 )
 
-// --- Arrow keys move the selected node ---
-// React Flow moves selected nodes only, so select the focused node first.
-const alreadySelected = await evaluate(`document.activeElement.classList.contains("selected")`)
-if (!alreadySelected) {
-  await key({ key: "Enter", code: "Enter", keyCode: 13 })
-  await wait(200)
-}
+// --- Selection follows keyboard focus, so arrows work with no Enter ---
+// The store write lands on the next render; give it a beat.
+await wait(200)
+check(
+  "Tab selects the focused node",
+  await evaluate(`document.activeElement.classList.contains("selected")`),
+)
+
 const transformBefore = await evaluate(`document.activeElement.style.transform`)
 await key({ key: "ArrowRight", code: "ArrowRight", keyCode: 39 })
 await wait(300)

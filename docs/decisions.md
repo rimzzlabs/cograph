@@ -757,6 +757,36 @@ nodes, and with a visible ring the focus, Enter, arrows sequence is discoverable
 
 ---
 
+## 034 — Selection follows keyboard focus
+
+**Date:** 2026-08-29
+
+Entry 033 restored the focus ring, and manual testing then found the deeper gap. A click selects a
+node, but Tab only focused one. Everything that matters keys on selection: the arrow keys, the
+halo, and the agent's selection-gated WebMCP tools. So a keyboard user saw a ring, pressed the
+arrows, and nothing moved — and the agent never received `update_selected_service` for the node
+the keyboard sat on.
+
+Focus on a node now writes that node to the selection store, so Tab behaves exactly like a click:
+halo, arrow movement through React Flow's own handler, and the tool surface. Entry 033's rejection
+of arrow movement for an unselected node stands — the node is simply never unselected when focus
+arrives by keyboard.
+
+The one exception is the multi-select flow. Cmd or Ctrl+Enter adds the newly focused node to the
+selection, and a focus-select would first throw the previous selection away. Window listeners
+track the modifier, and focus-select stands down while it is held. A window blur resets the flag,
+so a stuck modifier cannot survive a tab switch.
+
+The a11y check asserts the new behaviour with real Tab traversal: the focused node is selected,
+and an arrow key moves it with no Enter in between. 14 checks pass.
+
+**Rejected:** a keydown handler that moves a focused, unselected node (a second movement path
+would drift from React Flow's, and selection-follows-focus makes the state model match the
+screen); selecting on focus only when the selection is empty (focus on one node while the
+selection sits on another splits the keyboard user's reality in two).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

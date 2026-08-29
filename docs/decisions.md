@@ -331,6 +331,7 @@ own the clock).
 ---
 
 <<<<<<< HEAD
+
 ## 017 — Recolour the theme: calm warm neutrals, no blue
 
 **Date:** 2026-08-29
@@ -508,16 +509,16 @@ hackathon clock is real).
 
 **Date:** 2026-08-29
 
-The permission-driven tool surface is the highest-scoring behaviour, and no user could see it.
-The viewer role existed in code, and nothing assigned it.
+The permission-driven tool surface is the highest-scoring behaviour, and no user could see it. The
+viewer role existed in code, and nothing assigned it.
 
-The role now rides the URL. `?role=viewer` opens the room read-only: no toolbar, no context menu,
-no keyboard deletion, and the agent gets only the read-only tools. Dropping the param restores the
+The role now rides the URL. `?role=viewer` opens the room read-only: no toolbar, no context menu, no
+keyboard deletion, and the agent gets only the read-only tools. Dropping the param restores the
 editor role. A "View link" button in the top bar copies the link, and a read-only badge shows the
 active state.
 
-This stays a client-side role, per the known open risk: the Durable Object still accepts any
-write. The link is a demo of the tool surface, not a security boundary.
+This stays a client-side role, per the known open risk: the Durable Object still accepts any write.
+The link is a demo of the tool surface, not a security boundary.
 
 **Rejected:** persisting the role (a viewer link must not lock a browser profile out of its own
 rooms); a share dialog with both links (the edit link is the plain URL, one button is enough).
@@ -547,9 +548,9 @@ gaps that an automated check can hold in place:
   emits a "disconnected" status.
 
 The work found the selection bug first: the graph is fully controlled, but `select` changes were
-ignored, so React Flow cleared every selection on the next snapshot render. Main fixed the same
-bug independently in entries 020 and 022. The rebase keeps the fix from main and drops the version
-from this branch.
+ignored, so React Flow cleared every selection on the next snapshot render. Main fixed the same bug
+independently in entries 020 and 022. The rebase keeps the fix from main and drops the version from
+this branch.
 
 `scripts/a11y-check.mjs` drives the built app in headless Chrome with trusted input and asserts all
 of the above — 10 checks. It does not replace a pass with a real screen reader, which stays open on
@@ -570,13 +571,44 @@ The viewer role gated our own handlers: the toolbar, the context menu, keyboard 
 agent tools. It did not gate React Flow's built-in interactions. `nodesDraggable` defaults to true,
 and the position handler in `onNodesChange` wrote to the document without a role check.
 
-`nodesDraggable`, `nodesConnectable`, and `elementsSelectable` now follow the role, so a viewer
-can not move a card, start a connection, or select anything. The position write also checks the
-role, as defence in depth. A selection made before the role turned viewer is cleared.
+`nodesDraggable`, `nodesConnectable`, and `elementsSelectable` now follow the role, so a viewer can
+not move a card, start a connection, or select anything. The position write also checks the role, as
+defence in depth. A selection made before the role turned viewer is cleared.
 
-The first version of this fix kept selection for viewers, with the argument that the read-only
-tools use it. That argument was wrong: no read-only tool reads the selection, and the selection
-ring promises an edit that the role forbids.
+The first version of this fix kept selection for viewers, with the argument that the read-only tools
+use it. That argument was wrong: no read-only tool reads the selection, and the selection ring
+promises an edit that the role forbids.
+
+---
+
+## 027 — A visual identity built from the app's own tokens
+
+**Date:** 2026-08-29
+
+The project had no logo, no favicon, and no social card. Devpost needs a cover image.
+
+The mark is two nodes of a graph, joined by two edges that meet at an agent cursor. The two nodes
+take the lavender primary. The cursor takes sage and uses the pointer shape from
+`board-cursor-layer.tsx`, at 1.5 scale. Every colour is the sRGB conversion of an OKLCH token in
+`src/index.css`, so the identity and the product use one palette.
+
+The first draft also drew an edge between the two nodes. That closed the figure into a triangle, and
+a raster test at icon size showed the triangle beat the graph: the mark read as a play button. The
+third edge is removed.
+
+The favicon is a rounded tile of the canvas colour with the mark on it. The bare mark gives about
+1.9:1 contrast on a white tab bar, which is not enough.
+
+The cover is 1200 by 675 and the social card is 1200 by 630. Both show the board itself, with real
+card styling, real service kinds, and the agent's seat. A cover that shows only a mark tells a judge
+nothing. The `workers.dev` URL is on neither: it reads as a temporary address.
+
+PNG export uses `resvg`, a Rust renderer, run from the scratchpad. The project gains no dependency.
+
+**Rejected:** a C lettermark (it says the name, and the wordmark already does that, so the icon
+would say nothing new); two cursors on one shared node (the opposed arrows read as conflict);
+outlining the wordmark now (the served assets are raster already, so the risk is limited to future
+third-party use of the SVG).
 
 ---
 
@@ -584,7 +616,6 @@ ring promises an edit that the role forbids.
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The
   challenge names ChatGPT's browser as a judging surface, and nothing here has touched it. The app
-  is deployed at https://cograph.rimzzlabs.workers.dev (2026-08-29), and the phone check is
-  pending.
+  is deployed at https://cograph.rimzzlabs.workers.dev (2026-08-29), and the phone check is pending.
 - **The repository is private.** The submission needs a public repository with a license file at the
   root. Keep it private until near the deadline, then flip it.

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-labelledby="og-title og-desc">
+  <title id="og-title">Cograph</title>
+  <desc id="og-desc">A shared architecture graph where your agent has a cursor. Three service cards, their dependencies, and an agent cursor with a name chip.</desc>
+
+  <defs>
+    <pattern id="ogdots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.3" fill="#38352e" />
+    </pattern>
+    <style>
+      .l { font-family: system-ui, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="630" fill="#161310" />
+  <rect width="1200" height="630" fill="url(#ogdots)" />
+
+  <!-- Identity -->
+  <g transform="translate(80 134) scale(1.3)">
+    <g fill="none" stroke="#b99ee9" stroke-width="3.2" stroke-linecap="round">
+      <path d="M14 18 L36 28" />
+      <path d="M14 46 L36 28" />
+    </g>
+    <circle cx="14" cy="18" r="6.5" fill="#b99ee9" />
+    <circle cx="14" cy="46" r="6.5" fill="#b99ee9" />
+    <path d="M36 28 L57 36 L47 39 L44 49 Z" fill="#81bb8d" />
+  </g>
+
+  <text class="l" x="80" y="318" font-size="80" font-weight="600" letter-spacing="-2.2" fill="#eae8e2">Cograph</text>
+  <text class="l" x="80" y="372" font-size="25" fill="#a29e96">A shared architecture graph</text>
+  <text class="l" x="80" y="408" font-size="25" fill="#a29e96">where your agent has a cursor.</text>
+
+  <rect x="80" y="442" width="210" height="38" rx="19" fill="#81bb8d" fill-opacity="0.12" stroke="#81bb8d" stroke-opacity="0.45" stroke-width="1.5" />
+  <text class="l" x="101" y="467" font-size="16.5" font-weight="500" letter-spacing="0.3" fill="#81bb8d">Built with WebMCP</text>
+
+  <!-- The board -->
+  <g fill="none" stroke="#4a463e" stroke-width="2.5" stroke-linecap="round">
+    <path d="M850 141 C 890 141, 880 315, 920 315" />
+    <path d="M745 178 V 452" />
+    <path d="M850 489 C 900 489, 890 352, 920 352" />
+  </g>
+
+  <g class="l">
+    <g transform="translate(640 104)">
+      <rect width="210" height="74" rx="14" fill="#1e1b17" stroke="#b99ee9" stroke-opacity="0.5" stroke-width="2" />
+      <rect x="16" y="22" width="30" height="30" rx="9" fill="#b99ee9" fill-opacity="0.15" />
+      <path d="M31 30 L38.5 34 v8 L31 46 L23.5 42 v-8 Z" fill="none" stroke="#b99ee9" stroke-width="1.8" stroke-linejoin="round" />
+      <text x="58" y="40" font-size="17" font-weight="500" fill="#eae8e2">web-app</text>
+      <text x="58" y="58" font-size="12.5" fill="#a29e96">Service</text>
+    </g>
+
+    <g transform="translate(920 278)">
+      <rect width="210" height="74" rx="14" fill="#1e1b17" stroke="#81bb8d" stroke-opacity="0.5" stroke-width="2" />
+      <rect x="16" y="22" width="30" height="30" rx="9" fill="#81bb8d" fill-opacity="0.15" />
+      <g fill="none" stroke="#81bb8d" stroke-width="1.8">
+        <ellipse cx="31" cy="32.5" rx="7.5" ry="3" />
+        <path d="M23.5 32.5 v10 c0 1.7 3.4 3 7.5 3 s7.5 -1.3 7.5 -3 v-10" />
+        <path d="M23.5 37.5 c0 1.7 3.4 3 7.5 3 s7.5 -1.3 7.5 -3" />
+      </g>
+      <text x="58" y="40" font-size="17" font-weight="500" fill="#eae8e2">postgres</text>
+      <text x="58" y="58" font-size="12.5" fill="#a29e96">Datastore</text>
+    </g>
+
+    <g transform="translate(640 452)">
+      <rect width="210" height="74" rx="14" fill="#1e1b17" stroke="#e0b364" stroke-opacity="0.5" stroke-width="2" />
+      <rect x="16" y="22" width="30" height="30" rx="9" fill="#e0b364" fill-opacity="0.15" />
+      <g fill="none" stroke="#e0b364" stroke-width="1.8" stroke-linejoin="round">
+        <path d="M31 27 L39 31 L31 35 L23 31 Z" />
+        <path d="M23 36 L31 40 L39 36" />
+        <path d="M23 41 L31 45 L39 41" />
+      </g>
+      <text x="58" y="40" font-size="17" font-weight="500" fill="#eae8e2">jobs</text>
+      <text x="58" y="58" font-size="12.5" fill="#a29e96">Queue</text>
+    </g>
+  </g>
+
+  <!-- The agent has a seat, and a cursor -->
+  <g>
+    <path d="M890 214 L916 225 L904.5 228.5 L901 240 Z" fill="#81bb8d" stroke="#161310" stroke-width="1.5" stroke-linejoin="round" />
+    <rect x="906" y="230" width="126" height="26" rx="7" fill="#81bb8d" />
+    <text class="l" x="917" y="248" font-size="14" font-weight="600" fill="#161310">Claude · agent</text>
+  </g>
+</svg>

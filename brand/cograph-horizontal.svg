@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 262 64" width="262" height="64" role="img" aria-label="Cograph">
+  <g fill="none" stroke="#b99ee9" stroke-width="3.2" stroke-linecap="round">
+    <path d="M14 18 L36 28" />
+    <path d="M14 46 L36 28" />
+  </g>
+  <circle cx="14" cy="18" r="6.5" fill="#b99ee9" />
+  <circle cx="14" cy="46" r="6.5" fill="#b99ee9" />
+  <path d="M36 28 L57 36 L47 39 L44 49 Z" fill="#81bb8d" />
+  <text x="76" y="42" font-family="system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="600" letter-spacing="-0.7" fill="#eae8e2">Cograph</text>
+</svg>

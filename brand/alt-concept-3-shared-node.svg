@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="alt3-title alt3-desc">
+  <title id="alt3-title">Cograph, concept 3</title>
+  <desc id="alt3-desc">Two cursors, one human and one agent, that touch the same node.</desc>
+  <circle cx="32" cy="32" r="9" fill="none" stroke="#eae8e2" stroke-width="3" />
+  <path d="M24 24 L8 17.5 L15 15 L17.5 8 Z" fill="#b99ee9" />
+  <path d="M40 40 L56 46.5 L49 49 L46.5 56 Z" fill="#81bb8d" />
+</svg>

@@ -31,10 +31,10 @@ export function LandingHero() {
             style={{ "--rise-order": 2 } as CSSProperties}
           >
             <Link
-              to="/r/demo"
+              to="/rooms"
               className={cn(buttonVariants({ size: "lg" }), "landing-cta-glow cursor-pointer")}
             >
-              Open the board
+              Browse the rooms
             </Link>
             <a
               href="https://github.com/rimzzlabs/cograph"

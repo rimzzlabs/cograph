@@ -13,10 +13,9 @@ const STEPS: LandingStep[] = [
     title: "Open a room",
     body: (
       <>
-        Rooms live at{" "}
-        <code className="font-landing-display text-[0.85em] text-ink">/r/&lt;name&gt;</code>. Each
-        one is a Yjs document behind its own Cloudflare Durable Object, so everyone in the room sees
-        the same graph, live.
+        Pick one from the room list, or create your own — one per person. Each room is a Yjs
+        document behind its own Cloudflare Durable Object, so everyone in it sees the same graph,
+        live.
       </>
     ),
   },

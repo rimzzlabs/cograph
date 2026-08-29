@@ -26,6 +26,7 @@ const PROTOCOL_LINKS: FooterLink[] = [
     href: "https://github.com/webmachinelearning/webmcp",
     external: true,
   },
+  { label: "All rooms", href: "/rooms" },
   { label: "The demo room", href: "/r/demo" },
   { label: "View-only link", href: "/r/demo?role=viewer" },
 ]

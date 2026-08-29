@@ -28,6 +28,11 @@ const FAQ_ITEMS: FaqItem[] = [
       "The graph is a Yjs CRDT. Concurrent edits merge without locks or conflicts, and one Durable Object per room relays and persists the document.",
   },
   {
+    question: "Why can I only create one room?",
+    answer:
+      "Cograph runs on the Cloudflare free tier, and every room is its own Durable Object. One created room per person and a global cap keep the object count safe. The demo room is exempt and always open.",
+  },
+  {
     question: "What stops the agent from wrecking the board?",
     answer:
       "The same thing that stops a person: a role. A viewer's agent gets read-only tools, destructive tools carry a label so an agent can ask before calling one, and notes written by other participants arrive marked as untrusted data.",

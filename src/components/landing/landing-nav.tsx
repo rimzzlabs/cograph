@@ -52,8 +52,8 @@ export function LandingNav() {
             GitHub
           </a>
           <ThemeToggle />
-          <Link to="/r/demo" className={cn(buttonVariants(), "cursor-pointer")}>
-            Open the board
+          <Link to="/rooms" className={cn(buttonVariants(), "cursor-pointer")}>
+            Browse rooms
           </Link>
         </div>
       </div>

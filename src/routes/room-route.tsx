@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useParams, useSearchParams } from "react-router"
+import { Link, useParams, useSearchParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
 import type { CursorMarker } from "@/components/board/board-cursor-layer"
@@ -8,12 +8,15 @@ import { ParticipantNameDialog } from "@/components/presence/participant-name-di
 import { ShareViewLink } from "@/components/presence/share-view-link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
+import { buttonVariants } from "@/components/ui/button"
 import { useBoardAnnouncements } from "@/lib/graph/use-board-announcements"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
 import { IDLE_RECHECK_INTERVAL_MS, isOnline, useNow } from "@/lib/presence/idle"
 import { useLastActiveAt } from "@/lib/presence/use-last-active"
 import { type AgentPresence, publishCursor, usePresence } from "@/lib/presence/use-presence"
+import { roomExists } from "@/lib/rooms/api"
+import { cn } from "@/lib/utils"
 import { useBoardConnection, useBoardSnapshot, useConnectionStatus } from "@/lib/yjs/use-board"
 import { agentIdentityFor, useAgentStore } from "@/stores/agent-store"
 import { useSessionStore } from "@/stores/session-store"
@@ -21,6 +24,43 @@ import { useSessionStore } from "@/stores/session-store"
 export function RoomRoute() {
   const params = useParams<{ roomId: string }>()
   const roomId = params.roomId ?? "lobby"
+  const [known, setKnown] = useState<"checking" | "exists" | "missing">("checking")
+
+  // The registry refuses sockets for unknown rooms, so ask it first instead
+  // of letting the provider retry against a 404 forever. A failed check
+  // falls back to "exists" and lets the board try anyway.
+  useEffect(() => {
+    const controller = new AbortController()
+    roomExists(roomId, controller.signal)
+      .then((result) => setKnown(result.ok && !result.value ? "missing" : "exists"))
+      .catch(() => {})
+    return () => controller.abort()
+  }, [roomId])
+
+  if (known === "checking") {
+    return <p className="p-4 text-ink-muted text-sm">Checking the room\u2026</p>
+  }
+
+  if (known === "missing") {
+    return (
+      <main className="mx-auto w-full max-w-md px-6 py-16">
+        <h1 className="font-semibold text-ink text-xl">This room does not exist</h1>
+        <p className="mt-2 text-ink-muted text-sm leading-relaxed">
+          Nobody created <code className="font-mono">/r/{roomId}</code>. Pick a room from the list,
+          or create one there.
+        </p>
+        <Link to="/rooms" className={cn(buttonVariants(), "mt-6 cursor-pointer")}>
+          Browse rooms
+        </Link>
+      </main>
+    )
+  }
+
+  return <RoomSession roomId={roomId} />
+}
+
+function RoomSession(props: { roomId: string }) {
+  const roomId = props.roomId
 
   const board = useBoardConnection(roomId)
   const snapshot = useBoardSnapshot(board)

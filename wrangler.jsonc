@@ -9,8 +9,14 @@
     "run_worker_first": ["/api/*"]
   },
   "durable_objects": {
-    "bindings": [{ "name": "ROOM", "class_name": "RoomDurableObject" }]
+    "bindings": [
+      { "name": "ROOM", "class_name": "RoomDurableObject" },
+      { "name": "DIRECTORY", "class_name": "RoomsDirectoryDurableObject" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomDurableObject"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RoomDurableObject"] },
+    { "tag": "v2", "new_sqlite_classes": ["RoomsDirectoryDurableObject"] }
+  ],
   "observability": { "enabled": true }
 }

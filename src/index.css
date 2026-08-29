@@ -85,6 +85,15 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Landing-only type and depth. The board keeps the system stack (decision
+   015): a font file downloads only when a rendered element uses the family,
+   and only the landing route uses these two. */
+@theme inline {
+  --font-landing-display: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-landing-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: 0 1px 2px oklch(0.2 0.01 80 / 0.06), 0 12px 32px -12px oklch(0.2 0.01 80 / 0.18);
+}
+
 /* The shadcn contract tokens alias the palette above, so one .dark block
    retints all of them. The theme store toggles the class at runtime. */
 :root {
@@ -134,9 +143,144 @@
     height: 100%;
   }
 
+  /* The landing page can carry wide content (the tool table scrolls in its
+     own container). Clip, not hidden: clip keeps position sticky and fixed
+     working for descendants, so the board routes are unaffected. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background font-sans text-foreground;
     overscroll-behavior: none;
+  }
+}
+
+/* The landing page moves in three places only: one entrance stagger, the
+   simulated agent cursor, and the tool chip that registers while the agent
+   sits on the selected node. The preview loops, so a control can pause it,
+   and reduced motion renders the static final state. */
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-rise {
+  animation: landing-rise 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--rise-order, 0) * 70ms);
+}
+
+@keyframes landing-agent-drift {
+  0%,
+  10% {
+    transform: translate(0, 0);
+  }
+  30%,
+  55% {
+    transform: translate(-158px, 182px);
+  }
+  72%,
+  86% {
+    transform: translate(-44px, 252px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.landing-agent-drift {
+  animation: landing-agent-drift 14s ease-in-out infinite;
+}
+
+@keyframes landing-chip-cycle {
+  0%,
+  30% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  36%,
+  55% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  62%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.landing-chip-cycle {
+  animation: landing-chip-cycle 14s ease-in-out infinite;
+}
+
+.landing-preview-paused .landing-agent-drift,
+.landing-preview-paused .landing-chip-cycle {
+  animation-play-state: paused;
+}
+
+/* The view layer: glow fields, grain, and the human-to-agent gradient that
+   signs the brand. Every colour comes through color-mix on the palette
+   tokens, so both themes tint the effects. */
+.landing-glow-field {
+  background-image:
+    radial-gradient(
+      42rem 28rem at 16% 8%,
+      color-mix(in oklab, var(--color-human) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40rem 26rem at 88% 36%,
+      color-mix(in oklab, var(--color-agent) 13%, transparent),
+      transparent 70%
+    );
+}
+
+.landing-grain {
+  position: relative;
+}
+
+.landing-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.landing-label {
+  color: color-mix(in oklab, var(--color-agent) 72%, var(--color-ink));
+}
+
+.landing-rule-gradient {
+  background: linear-gradient(90deg, var(--color-human), var(--color-agent));
+}
+
+.landing-cta-glow {
+  box-shadow: 0 0 28px -4px color-mix(in oklab, var(--color-human) 45%, transparent);
+}
+
+.landing-code-glow {
+  box-shadow: 0 0 36px -8px color-mix(in oklab, var(--color-agent) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-rise,
+  .landing-agent-drift {
+    animation: none;
+  }
+
+  .landing-chip-cycle {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 

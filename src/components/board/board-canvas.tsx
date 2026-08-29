@@ -47,6 +47,8 @@ interface BoardCanvasProps {
   board: BoardConnection
   snapshot: BoardSnapshot
   cursors: CursorMarker[]
+  /** Nodes any agent has selected — rendered as a dashed presence ring. */
+  agentSelectedNodeIds: string[]
   onCursorMove: (position: { x: number; y: number } | null) => void
 }
 
@@ -65,7 +67,7 @@ export function BoardCanvas(props: BoardCanvasProps) {
  * so there is exactly one source of truth.
  */
 function BoardCanvasInner(props: BoardCanvasProps) {
-  const { board, snapshot, cursors, onCursorMove } = props
+  const { board, snapshot, cursors, agentSelectedNodeIds, onCursorMove } = props
 
   const me = useSessionStore((state) => state.me)
   const theme = useThemeStore((state) => state.theme)
@@ -154,9 +156,10 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         data: {
           ...node.data,
           highlighted: highlightedNodeIds.includes(node.id) || impactedIds.has(node.id),
+          agentSelected: agentSelectedNodeIds.includes(node.id),
         },
       })),
-    [snapshot.nodes, highlightedNodeIds, selectedNodeIds, impactedIds],
+    [snapshot.nodes, highlightedNodeIds, selectedNodeIds, impactedIds, agentSelectedNodeIds],
   )
 
   const nodeLabels = useMemo(
@@ -238,6 +241,12 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!editable || !connection.source || !connection.target) return
+      // connectNodes upserts the kind on an existing pair. A drag hardcodes
+      // "calls", so guard here — redrawing an edge must not downgrade it.
+      const exists = snapshot.edges.some(
+        (edge) => edge.source === connection.source && edge.target === connection.target,
+      )
+      if (exists) return
       connectNodes({
         board,
         source: connection.source,
@@ -245,7 +254,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         kind: "calls",
       })
     },
-    [board, editable],
+    [board, editable, snapshot.edges],
   )
 
   const onPaneClick = useCallback(() => {

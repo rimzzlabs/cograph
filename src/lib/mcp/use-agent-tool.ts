@@ -81,6 +81,13 @@ export function useAgentTool(spec: AgentToolSpec | null) {
             if (!current) return errorResult("This tool is no longer available.")
 
             const result = await current.execute(args, options)
+            // Every failure becomes a danger line in the agent's cursor
+            // bubble, so a refused call is visible on the canvas, not only in
+            // the inspector. Tools announce their own success lines.
+            if (result.isError) {
+              const text = result.content.map((part) => part.text).join(" ")
+              useAgentStore.getState().announce({ text, tone: "danger" })
+            }
             // A tool call is always the agent acting; give it its seat.
             useAgentStore.getState().markToolCall({ tool: declaration.name })
             recordCall({

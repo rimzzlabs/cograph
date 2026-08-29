@@ -120,18 +120,19 @@
               </td>
             </tr>
             <tr>
-              <td>Role permits editing</td>
-              <td>adds <code>add_service</code>, <code>simulate_failure</code></td>
-            </tr>
-            <tr>
-              <td>One service selected</td>
+              <td>Role permits editing — services</td>
               <td>
-                adds <code>update_selected_service</code>, <code>delete_selected_service</code>
+                adds <code>add_service</code>, <code>update_service</code>,
+                <code>delete_service</code>, <code>move_service</code>,
+                <code>select_services</code>, <code>simulate_failure</code>
               </td>
             </tr>
             <tr>
-              <td>Two services selected</td>
-              <td>adds <code>connect_selected_services</code></td>
+              <td>Role permits editing — edges</td>
+              <td>
+                adds <code>connect_services</code>, <code>set_dependency_kind</code>,
+                <code>reverse_dependency</code>, <code>disconnect_services</code>
+              </td>
             </tr>
             <tr>
               <td>A service is down</td>

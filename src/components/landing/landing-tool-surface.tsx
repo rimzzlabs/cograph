@@ -18,13 +18,23 @@ const TOOL_SURFACE_ROWS: ToolSurfaceRow[] = [
       "read_service_notes",
     ],
   },
-  { state: "Role permits editing", prefix: "adds", tools: ["add_service", "simulate_failure"] },
   {
-    state: "One service selected",
+    state: "Role permits editing — services",
     prefix: "adds",
-    tools: ["update_selected_service", "delete_selected_service"],
+    tools: [
+      "add_service",
+      "update_service",
+      "delete_service",
+      "move_service",
+      "select_services",
+      "simulate_failure",
+    ],
   },
-  { state: "Two services selected", prefix: "adds", tools: ["connect_selected_services"] },
+  {
+    state: "Role permits editing — edges",
+    prefix: "adds",
+    tools: ["connect_services", "set_dependency_kind", "reverse_dependency", "disconnect_services"],
+  },
   { state: "A service is down", prefix: "adds", tools: ["resolve_incident"] },
   { state: "Role is viewer", tools: [] },
 ]
@@ -44,11 +54,10 @@ export function LandingToolSurface() {
           exist for the agent, so the agent cannot call it and get an error.
         </p>
         <p className="mt-4 max-w-[52ch] text-ink-muted leading-relaxed">
-          Select a service on the canvas and{" "}
-          <code className="font-landing-display text-[0.85em] text-ink">
-            update_selected_service
-          </code>{" "}
-          appears in the agent's hands. Deselect it, and the tool is gone.
+          Mark a service down and{" "}
+          <code className="font-landing-display text-[0.85em] text-ink">resolve_incident</code>{" "}
+          appears in the agent's hands. Restore it, and the tool is gone. Open the room as a viewer,
+          and every mutating tool disappears with the role.
         </p>
       </div>
 

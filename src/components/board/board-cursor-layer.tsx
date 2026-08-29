@@ -1,5 +1,7 @@
 import { ViewportPortal } from "@xyflow/react"
+import type { AgentActivity } from "@/stores/agent-store"
 import type { ParticipantKind } from "@/stores/session-store"
+import { BoardCursorBubble } from "./board-cursor-bubble"
 
 export interface CursorMarker {
   id: string
@@ -7,6 +9,8 @@ export interface CursorMarker {
   kind: ParticipantKind
   color: string
   cursor: { x: number; y: number }
+  /** The line an agent is currently speaking; humans never carry one. */
+  activity: AgentActivity | null
 }
 
 interface BoardCursorLayerProps {
@@ -42,6 +46,13 @@ export function BoardCursorLayer(props: BoardCursorLayerProps) {
             {marker.name}
             {marker.kind === "agent" ? " ⚙" : ""}
           </span>
+          {marker.activity ? (
+            <BoardCursorBubble
+              key={marker.activity.id}
+              activity={marker.activity}
+              color={marker.color}
+            />
+          ) : null}
         </div>
       ))}
     </ViewportPortal>

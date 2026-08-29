@@ -84,6 +84,8 @@ function RoomSession(props: { roomId: string }) {
   const agentActive = useAgentStore((state) => state.active)
   const agentCursor = useAgentStore((state) => state.cursor)
   const agentLastActiveAt = useAgentStore((state) => state.lastActiveAt)
+  const agentActivity = useAgentStore((state) => state.activity)
+  const agentSelection = useAgentStore((state) => state.selection)
 
   const lastActiveAt = useLastActiveAt()
 
@@ -96,9 +98,11 @@ function RoomSession(props: { roomId: string }) {
             participant: agentIdentityFor(me),
             cursor: agentCursor,
             lastActiveAt: agentLastActiveAt,
+            activity: agentActivity,
+            selection: agentSelection,
           }
         : null,
-    [agentActive, agentCursor, agentLastActiveAt, me],
+    [agentActive, agentCursor, agentLastActiveAt, agentActivity, agentSelection, me],
   )
 
   const others = usePresence({
@@ -116,9 +120,10 @@ function RoomSession(props: { roomId: string }) {
             ...others,
             {
               participant: localAgent.participant,
-              selection: [],
+              selection: localAgent.selection,
               cursor: localAgent.cursor,
               lastActiveAt: localAgent.lastActiveAt,
+              activity: localAgent.activity,
             },
           ]
         : others,
@@ -153,8 +158,19 @@ function RoomSession(props: { roomId: string }) {
           kind: entry.participant.kind,
           color: colors.get(entry.participant.id) ?? "oklch(0.74 0.15 240)",
           cursor: entry.cursor as { x: number; y: number },
+          activity: entry.participant.kind === "agent" ? entry.activity : null,
         })),
     [roster, colors, now],
+  )
+
+  // Every agent's selection, merged. It renders as a dashed ring so peers can
+  // see what the agents are looking at — presence, never a tool gate.
+  const agentSelectedNodeIds = useMemo(
+    () =>
+      roster
+        .filter((entry) => entry.participant.kind === "agent")
+        .flatMap((entry) => entry.selection),
+    [roster],
   )
 
   const onCursorMove = useCallback(
@@ -210,6 +226,7 @@ function RoomSession(props: { roomId: string }) {
               board={board}
               snapshot={snapshot}
               cursors={cursors}
+              agentSelectedNodeIds={agentSelectedNodeIds}
               onCursorMove={onCursorMove}
             />
           ) : (

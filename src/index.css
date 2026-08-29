@@ -6,10 +6,29 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Source of truth: the Cograph palette. Every shadcn token below maps to
-   one of these values. */
+   one of these values. The light scheme lives here; .dark overrides the same
+   custom properties, so every utility and shadcn token follows the class. */
 @theme {
   /* Warm stone neutrals (hue ~80) instead of the old cold blue-grey (264).
      Low chroma everywhere keeps the canvas calm under any participant colour. */
+  --color-canvas: oklch(0.96 0.007 85);
+  --color-surface: oklch(0.985 0.005 85);
+  --color-surface-raised: oklch(0.995 0.003 85);
+  --color-line: oklch(0.88 0.012 85);
+  --color-ink: oklch(0.25 0.012 80);
+  --color-ink-muted: oklch(0.5 0.014 85);
+
+  --color-human: oklch(0.55 0.13 300);
+  --color-agent: oklch(0.52 0.1 150);
+  --color-danger: oklch(0.55 0.17 30);
+  --color-warn: oklch(0.62 0.12 80);
+}
+
+/* The dark scheme keeps the original values from decisions 017 and 018.
+   index.html sets the class before first paint, so there is no flash. */
+.dark {
+  color-scheme: dark;
+
   --color-canvas: oklch(0.19 0.008 80);
   --color-surface: oklch(0.225 0.009 80);
   --color-surface-raised: oklch(0.265 0.01 80);
@@ -66,9 +85,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* The app has one theme, and it is dark. index.html sets class="dark" on the
-   html element so component dark: variants stay active. */
+/* The shadcn contract tokens alias the palette above, so one .dark block
+   retints all of them. The theme store toggles the class at runtime. */
 :root {
+  color-scheme: light;
   --radius: 0.75rem;
   --background: var(--color-canvas);
   --foreground: var(--color-ink);

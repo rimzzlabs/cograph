@@ -48,6 +48,17 @@
     />
   </head>
   <body>
+    <!-- Pre-paint theme choice. This runs after every stylesheet in the head
+         and before any content renders, so a stored light choice can never
+         paint a dark frame first. Keep the key in sync with
+         src/stores/theme-store.ts. -->
+    <script>
+      try {
+        if (localStorage.getItem("cograph:theme") === "light") {
+          document.documentElement.classList.remove("dark")
+        }
+      } catch {}
+    </script>
     <div id="root">
       <!--
         Static shell. React clears this container on mount, so nobody with

@@ -33,6 +33,7 @@ import {
   updateNode,
 } from "@/lib/yjs/mutations"
 import { canEdit, useSessionStore } from "@/stores/session-store"
+import { useThemeStore } from "@/stores/theme-store"
 import { BoardContextMenu, type ContextMenuState } from "./board-context-menu"
 import { BoardCursorLayer, type CursorMarker } from "./board-cursor-layer"
 import { BoardFloatingEdge } from "./board-floating-edge"
@@ -67,6 +68,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   const { board, snapshot, cursors, onCursorMove } = props
 
   const me = useSessionStore((state) => state.me)
+  const theme = useThemeStore((state) => state.theme)
   const highlightedNodeIds = useSessionStore((state) => state.highlightedNodeIds)
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
   const selectedEdgeIds = useSessionStore((state) => state.selectedEdgeIds)
@@ -410,7 +412,10 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         nodesDraggable={editable}
         nodesConnectable={editable}
         elementsSelectable={editable}
-        colorMode="dark"
+        // A fixed "dark" here put React Flow's own dark class on the canvas
+        // wrapper, which re-activated our .dark tokens inside it and kept the
+        // whole board dark under the light theme.
+        colorMode={theme}
         fitView
         panOnDrag={[1, 2]}
         panOnScroll

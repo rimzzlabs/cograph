@@ -83,6 +83,41 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   useEffect(() => {
     if (!editable) setSelection({ nodes: [], edges: [] })
   }, [editable, setSelection])
+
+  // Selection follows keyboard focus, except while the multi-select modifier
+  // is held: Cmd or Ctrl+Enter adds the newly focused node to the selection,
+  // and a focus-select here would first throw the previous selection away.
+  // Window listeners track the modifier, because the focus event cannot.
+  const multiModifierHeld = useRef(false)
+  useEffect(() => {
+    function onModifier(event: KeyboardEvent) {
+      if (event.key === "Meta" || event.key === "Control") {
+        multiModifierHeld.current = event.type === "keydown"
+      }
+    }
+    function onWindowBlur() {
+      multiModifierHeld.current = false
+    }
+    window.addEventListener("keydown", onModifier)
+    window.addEventListener("keyup", onModifier)
+    window.addEventListener("blur", onWindowBlur)
+    return () => {
+      window.removeEventListener("keydown", onModifier)
+      window.removeEventListener("keyup", onModifier)
+      window.removeEventListener("blur", onWindowBlur)
+    }
+  }, [])
+
+  // Tab onto a node selects it, so the halo, the arrow keys, and the agent's
+  // selection-gated tools all follow keyboard focus the way they follow a
+  // click. The store guard keeps the echo from a real click idempotent.
+  function onFocusIn(event: React.FocusEvent) {
+    if (!editable || multiModifierHeld.current) return
+    const nodeEl = (event.target as HTMLElement).closest<HTMLElement>(".react-flow__node")
+    const id = nodeEl?.dataset.id
+    if (!id) return
+    setSelection({ nodes: [id], edges: [] })
+  }
   const [menu, setMenu] = useState<ContextMenuState | null>(null)
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null)
   const [connectPair, setConnectPair] = useState<ConnectPair | null>(null)
@@ -390,6 +425,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       onKeyDown={onKeyDown}
+      onFocus={onFocusIn}
     >
       <ReactFlow
         nodes={nodes}

@@ -176,6 +176,9 @@ check("live region announced the additions", true)
 
 // --- Keyboard path to the menu, focus into it ---
 await evaluate(`document.querySelector(".react-flow__node").focus()`)
+// Focus now selects the node, which re-renders the canvas; let that settle
+// before the menu key, or the two race.
+await wait(200)
 await key({ key: "F10", code: "F10", keyCode: 121, modifiers: 8 })
 await wait(400)
 check(
@@ -200,22 +203,28 @@ check(
 await evaluate(`document.querySelectorAll(".react-flow__node")[0].focus()`)
 await key({ key: "Enter", code: "Enter", keyCode: 13 })
 await wait(200)
-// React Flow reads the multi-select modifier from window key events; hold
-// Control while selecting the second node.
+// React Flow reads the multi-select modifier from window key events, and the
+// key is platform-native: Meta on macOS, Control elsewhere. Dispatch the key
+// for the platform the check runs on, or the second Enter replaces the
+// selection instead of adding to it.
+const multiKey =
+  process.platform === "darwin"
+    ? { key: "Meta", code: "MetaLeft", windowsVirtualKeyCode: 91, modifiers: 4 }
+    : { key: "Control", code: "ControlLeft", windowsVirtualKeyCode: 17, modifiers: 2 }
 await send("Input.dispatchKeyEvent", {
   type: "rawKeyDown",
-  key: "Control",
-  code: "ControlLeft",
-  windowsVirtualKeyCode: 17,
-  modifiers: 2,
+  key: multiKey.key,
+  code: multiKey.code,
+  windowsVirtualKeyCode: multiKey.windowsVirtualKeyCode,
+  modifiers: multiKey.modifiers,
 })
 await evaluate(`document.querySelectorAll(".react-flow__node")[1].focus()`)
-await key({ key: "Enter", code: "Enter", keyCode: 13, modifiers: 2 })
+await key({ key: "Enter", code: "Enter", keyCode: 13, modifiers: multiKey.modifiers })
 await send("Input.dispatchKeyEvent", {
   type: "keyUp",
-  key: "Control",
-  code: "ControlLeft",
-  windowsVirtualKeyCode: 17,
+  key: multiKey.key,
+  code: multiKey.code,
+  windowsVirtualKeyCode: multiKey.windowsVirtualKeyCode,
 })
 await wait(200)
 const selected = await evaluate(`document.querySelectorAll(".react-flow__node.selected").length`)
@@ -248,6 +257,40 @@ check(
   "live region announced the dependency",
   /New dependency:/.test(liveAfter ?? ""),
   String(liveAfter),
+)
+
+// --- Real Tab traversal: focus must be reachable and visible ---
+await evaluate(`document.body.focus()`)
+let tabbedToNode = false
+for (let press = 0; press < 40 && !tabbedToNode; press += 1) {
+  await key({ key: "Tab", code: "Tab", keyCode: 9 })
+  tabbedToNode = await evaluate(
+    `document.activeElement?.classList?.contains("react-flow__node") === true`,
+  )
+}
+check("Tab reaches a node", tabbedToNode)
+check(
+  "keyboard focus on a node shows a visible outline",
+  await evaluate(`getComputedStyle(document.activeElement).outlineStyle !== "none"`),
+  await evaluate(`getComputedStyle(document.activeElement).outlineStyle`),
+)
+
+// --- Selection follows keyboard focus, so arrows work with no Enter ---
+// The store write lands on the next render; give it a beat.
+await wait(200)
+check(
+  "Tab selects the focused node",
+  await evaluate(`document.activeElement.classList.contains("selected")`),
+)
+
+const transformBefore = await evaluate(`document.activeElement.style.transform`)
+await key({ key: "ArrowRight", code: "ArrowRight", keyCode: 39 })
+await wait(300)
+const transformAfter = await evaluate(`document.activeElement.style.transform`)
+check(
+  "arrow key moves the selected node",
+  transformBefore !== transformAfter,
+  `${transformBefore} -> ${transformAfter}`,
 )
 
 ws.close()

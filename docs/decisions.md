@@ -711,6 +711,82 @@ the cursor separate from the ring (two clocks would let the cursor and the ring 
 
 ---
 
+## 032 — The a11y check speaks the platform's multi-select key
+
+**Date:** 2026-08-29
+
+`pnpm test:a11y` failed 4 checks on macOS: the keyboard multi-select selected one node, so the
+keyboard connect flow never ran. The failure looked like an app regression and was not one.
+
+React Flow's `multiSelectionKeyCode` is platform-native: Meta on macOS, Control elsewhere. The
+check dispatched Control on every platform, so it only passed where Control is the multi-select
+key. The check now picks the key from `process.platform`. All 10 checks pass on macOS again.
+
+The app does not change. Command-click is the macOS convention, and Control-click on macOS means
+right-click, which the board already uses for the context menu.
+
+This is the second check that was verified on one platform and failed on another — the WebMCP
+check needed an extra Blink flag on macOS (PR #23). Treat "verified" entries in this file as
+verified on the platform of that day's machine.
+
+**Rejected:** pinning `multiSelectionKeyCode` to both Meta and Control in the app (Control-click
+collides with the context menu on macOS, and a product change must not exist to satisfy a test).
+
+---
+
+## 033 — Restore the keyboard focus ring that React Flow removes
+
+**Date:** 2026-08-29
+
+Manual testing found the gap that entry 032's fix did not: Tab reached the nodes, but nothing
+showed it. React Flow's stylesheet sets `outline: none` on focused nodes. The keyboard model
+worked and looked dead — a focused node showed nothing, so Enter and the arrow keys seemed
+broken too. The arrows move a selected node only, and nobody can select what they cannot see.
+
+One CSS rule restores the ring on `:focus-visible`: 2 px in the ring colour, 2 px offset, on the
+node wrapper with the card's radius. A mouse click still shows no ring. The kind-coloured
+selection halo stays separate, so focus and selection read as two different states.
+
+The a11y check now drives real Tab traversal instead of programmatic focus, and asserts three new
+things: Tab reaches a node, the focused node has a visible outline, and an arrow key moves the
+selected node. 13 checks pass.
+
+**Rejected:** arrow-key movement for a focused but unselected node (React Flow moves selected
+nodes, and with a visible ring the focus, Enter, arrows sequence is discoverable); styling bare
+`:focus` (a mouse click would then ring every node it selects).
+
+---
+
+## 034 — Selection follows keyboard focus
+
+**Date:** 2026-08-29
+
+Entry 033 restored the focus ring, and manual testing then found the deeper gap. A click selects a
+node, but Tab only focused one. Everything that matters keys on selection: the arrow keys, the
+halo, and the agent's selection-gated WebMCP tools. So a keyboard user saw a ring, pressed the
+arrows, and nothing moved — and the agent never received `update_selected_service` for the node
+the keyboard sat on.
+
+Focus on a node now writes that node to the selection store, so Tab behaves exactly like a click:
+halo, arrow movement through React Flow's own handler, and the tool surface. Entry 033's rejection
+of arrow movement for an unselected node stands — the node is simply never unselected when focus
+arrives by keyboard.
+
+The one exception is the multi-select flow. Cmd or Ctrl+Enter adds the newly focused node to the
+selection, and a focus-select would first throw the previous selection away. Window listeners
+track the modifier, and focus-select stands down while it is held. A window blur resets the flag,
+so a stuck modifier cannot survive a tab switch.
+
+The a11y check asserts the new behaviour with real Tab traversal: the focused node is selected,
+and an arrow key moves it with no Enter in between. 14 checks pass.
+
+**Rejected:** a keydown handler that moves a focused, unselected node (a second movement path
+would drift from React Flow's, and selection-follows-focus makes the state model match the
+screen); selecting on focus only when the selection is empty (focus on one node while the
+selection sits on another splits the keyboard user's reality in two).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

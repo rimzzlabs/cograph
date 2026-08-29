@@ -12,6 +12,7 @@
     "typecheck": "tsc -b --noEmit",
     "test:color": "node scripts/color-check.ts",
     "test:webmcp": "node scripts/webmcp-check.mjs",
+    "test:a11y": "node scripts/a11y-check.mjs",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "prettier --write \"**/*.{md,yml,yaml}\"",

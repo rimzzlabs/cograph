@@ -66,8 +66,11 @@ export function useAgentTool(spec: AgentToolSpec | null) {
     >
     const controller = new AbortController()
 
-    void modelContext
-      .registerTool(
+    // A browser can ship document.modelContext with the feature disabled.
+    // registerTool then returns undefined, and a bare .then on it would crash
+    // the whole app. Promise.resolve accepts both shapes.
+    void Promise.resolve(
+      modelContext.registerTool(
         {
           name: declaration.name,
           description: declaration.description,
@@ -92,7 +95,8 @@ export function useAgentTool(spec: AgentToolSpec | null) {
           },
         },
         { signal: controller.signal, exposedTo: declaration.exposedTo },
-      )
+      ),
+    )
       .then(() => {
         addTool({
           name: declaration.name,

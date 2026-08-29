@@ -3,6 +3,8 @@
  * tokens for everything inside, so the band reads dark in the light theme
  * and stays coherent in the dark theme, where the borders delimit it.
  */
+import { ExternalLink } from "@/components/external-link"
+
 export function LandingWhy() {
   return (
     <section id="why" className="dark landing-grain scroll-mt-24 border-line border-y bg-canvas">
@@ -29,12 +31,12 @@ export function LandingWhy() {
           <p>
             Cograph is the counter-bet: put the agent in the room, with a name, a cursor, and a
             permission set, and let everyone watch it work.{" "}
-            <a
+            <ExternalLink
               href="https://github.com/webmachinelearning/webmcp"
               className="cursor-pointer text-ink underline decoration-line underline-offset-4 transition-colors duration-200 hover:decoration-ink"
             >
               WebMCP
-            </a>{" "}
+            </ExternalLink>{" "}
             makes the page itself the agent's tool server, so the board and the tools can never
             drift apart.
           </p>

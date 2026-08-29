@@ -1,3 +1,4 @@
+import { ExternalLink } from "@/components/external-link"
 import { LandingLabel } from "@/components/landing/landing-label"
 import { cn } from "@/lib/utils"
 
@@ -29,12 +30,12 @@ export function LandingOpen() {
               codebase is MIT-licensed.
             </p>
           </div>
-          <a
+          <ExternalLink
             href="https://github.com/rimzzlabs/cograph/blob/main/docs/decisions.md"
             className="cursor-pointer whitespace-nowrap rounded-md text-ink text-sm underline decoration-line underline-offset-4 outline-none transition-colors duration-200 hover:decoration-ink focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            Read the decision log ↗
-          </a>
+            Read the decision log
+          </ExternalLink>
         </div>
 
         <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">

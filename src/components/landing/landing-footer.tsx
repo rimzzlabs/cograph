@@ -1,5 +1,6 @@
 import { Link } from "react-router"
 import { BrandMark } from "@/components/brand-mark"
+import { ExternalLink } from "@/components/external-link"
 
 interface FooterLink {
   label: string
@@ -42,12 +43,12 @@ function FooterColumn(props: { heading: string; links: FooterLink[] }) {
         {props.links.map((link) => (
           <li key={link.label}>
             {link.external ? (
-              <a
+              <ExternalLink
                 href={link.href}
                 className="cursor-pointer whitespace-nowrap rounded-sm text-ink-muted text-sm outline-none transition-colors duration-200 hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 {link.label}
-              </a>
+              </ExternalLink>
             ) : (
               <Link
                 to={link.href}

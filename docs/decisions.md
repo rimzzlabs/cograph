@@ -478,9 +478,31 @@ set in document order.
 
 ---
 
+## 023 — A viewer link makes the permission story visible
+
+**Date:** 2026-08-29
+
+The permission-driven tool surface is the highest-scoring behaviour, and no user could see it.
+The viewer role existed in code, and nothing assigned it.
+
+The role now rides the URL. `?role=viewer` opens the room read-only: no toolbar, no context menu,
+no keyboard deletion, and the agent gets only the read-only tools. Dropping the param restores the
+editor role. A "View link" button in the top bar copies the link, and a read-only badge shows the
+active state.
+
+This stays a client-side role, per the known open risk: the Durable Object still accepts any
+write. The link is a demo of the tool surface, not a security boundary.
+
+**Rejected:** persisting the role (a viewer link must not lock a browser profile out of its own
+rooms); a share dialog with both links (the edit link is the plain URL, one button is enough).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The
-  challenge names ChatGPT's browser as a judging surface, and nothing here has touched it.
+  challenge names ChatGPT's browser as a judging surface, and nothing here has touched it. The app
+  is deployed at https://cograph.rimzzlabs.workers.dev (2026-08-29), and the phone check is
+  pending.
 - **The repository is private.** The submission needs a public repository with a license file at the
   root. Keep it private until near the deadline, then flip it.

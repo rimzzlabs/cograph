@@ -1,11 +1,13 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Split Studio · theme: project tokens
- * (Cograph palette, preserved — no catalog swap) · enrichment: Tier-B hand-built SVG board
- * figure · nav: N9 edge-aligned · footer: Ft2 inline single line
- * H2 knobs: ratio=7/5, right=hand-built SVG, divider=negative space · F3 knobs: columns=2,
- * rules=every-row · F4 knobs: numbering=01/02/03, layout=horizontal, connector=none ·
- * Ft2 knobs: order=wordmark/links/credit, separator=middot · fonts: system sans (preserved)
- * + ui-monospace outlier (tool names) · motion: none (composed page)
- * pre-emit critique: P4 H5 E4 S5 R5 V4 */
+/* Landing design system (ui-ux-pro-max): Real-Time/Operations landing pattern ·
+ * Soft UI Evolution style (raised cards, soft shadows, 200-300ms transitions) ·
+ * Developer Mono type pairing, landing-scoped (JetBrains Mono display, IBM Plex
+ * Sans body — the board keeps the system stack per decision 015) · palette:
+ * project tokens · motion: entrance stagger + simulated preview with pause
+ * control and reduced-motion static state. */
+import "@fontsource-variable/jetbrains-mono"
+import "@fontsource/ibm-plex-sans/400.css"
+import "@fontsource/ibm-plex-sans/500.css"
+import "@fontsource/ibm-plex-sans/600.css"
 import { LandingClosing } from "@/components/landing/landing-closing"
 import { LandingFooter } from "@/components/landing/landing-footer"
 import { LandingHero } from "@/components/landing/landing-hero"
@@ -16,7 +18,7 @@ import { LandingTrust } from "@/components/landing/landing-trust"
 
 export function LandingRoute() {
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col font-landing-sans">
       <LandingNav />
       <main className="flex-1">
         <LandingHero />

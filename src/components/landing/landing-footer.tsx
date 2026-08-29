@@ -2,7 +2,7 @@ export function LandingFooter() {
   return (
     <footer className="border-line border-t">
       <p className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-6 py-6 text-ink-muted text-sm">
-        <span className="text-ink">Cograph</span>
+        <span className="font-landing-display text-ink">cograph</span>
         <span aria-hidden="true">·</span>
         <span>a shared architecture graph</span>
         <span aria-hidden="true">·</span>

@@ -1,11 +1,47 @@
+import { Pause, Play } from "lucide-react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+
 /**
- * A hand-built rendition of the demo board: the checkout system from
- * example-board.ts, one human cursor, one agent cursor. Pure SVG on the
- * palette tokens, so both themes tint it for free.
+ * A simulated rendition of the demo room: the checkout system from
+ * example-board.ts, one human cursor, one agent cursor that drifts between
+ * nodes while a tool chip registers. Pure SVG on the palette tokens, so both
+ * themes tint it for free. The loop pauses from the control, and reduced
+ * motion renders the static final state.
  */
 export function LandingBoardFigure() {
+  const [paused, setPaused] = useState(false)
+
   return (
-    <figure className="min-w-0">
+    <figure
+      className={cn(
+        "min-w-0 rounded-2xl border border-line bg-surface shadow-soft",
+        paused && "landing-preview-paused",
+      )}
+    >
+      <div className="flex items-center justify-between border-line border-b px-4 py-2.5">
+        <span className="font-landing-display text-ink-muted text-xs">
+          /r/demo · simulated preview
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center" aria-hidden="true">
+            <span className="size-2.5 rounded-full bg-human" />
+            <span className="-ml-0.5 size-2.5 rounded-full bg-agent" />
+          </span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="cursor-pointer"
+            aria-pressed={paused}
+            aria-label={paused ? "Play the preview animation" : "Pause the preview animation"}
+            onClick={() => setPaused((current) => !current)}
+          >
+            {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+          </Button>
+        </div>
+      </div>
+
       <svg viewBox="0 0 560 400" className="h-auto w-full" aria-hidden="true" focusable="false">
         <defs>
           <pattern id="landing-board-dots" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -13,16 +49,8 @@ export function LandingBoardFigure() {
           </pattern>
         </defs>
 
-        <rect
-          x="0.5"
-          y="0.5"
-          width="559"
-          height="399"
-          rx="16"
-          fill="var(--color-canvas)"
-          stroke="var(--color-line)"
-        />
-        <rect x="8" y="8" width="544" height="384" rx="10" fill="url(#landing-board-dots)" />
+        <rect x="0" y="0" width="560" height="400" fill="var(--color-canvas)" />
+        <rect x="0" y="0" width="560" height="400" fill="url(#landing-board-dots)" />
 
         <g fill="none" stroke="var(--color-line)" strokeWidth="1.5">
           <path d="M176 93 C 196 93, 190 219, 210 219" />
@@ -103,6 +131,27 @@ export function LandingBoardFigure() {
           </text>
         </g>
 
+        <g className="landing-chip-cycle">
+          <rect
+            x="20"
+            y="20"
+            width="196"
+            height="24"
+            rx="7"
+            fill="var(--color-surface-raised)"
+            stroke="var(--color-agent)"
+          />
+          <text
+            x="30"
+            y="36"
+            fontSize="11"
+            fontFamily="var(--font-landing-display)"
+            fill="var(--color-agent)"
+          >
+            + update_selected_service
+          </text>
+        </g>
+
         <g>
           <path d="M296 150 L317 158 L307 161 L304 171 Z" fill="var(--color-human)" />
           <rect x="312" y="164" width="40" height="20" rx="10" fill="var(--color-human)" />
@@ -111,7 +160,7 @@ export function LandingBoardFigure() {
           </text>
         </g>
 
-        <g>
+        <g className="landing-agent-drift">
           <path d="M428 40 L449 48 L439 51 L436 61 Z" fill="var(--color-agent)" />
           <rect x="444" y="54" width="98" height="20" rx="10" fill="var(--color-agent)" />
           <text x="493" y="68" fontSize="11" textAnchor="middle" fill="var(--color-canvas)">
@@ -119,8 +168,9 @@ export function LandingBoardFigure() {
           </text>
         </g>
       </svg>
-      <figcaption className="mt-3 text-ink-muted text-sm">
-        The demo board: a small checkout system, one human, one agent.
+
+      <figcaption className="border-line border-t px-4 py-2.5 text-ink-muted text-xs">
+        A simulation of the demo room: a small checkout system, one human, one agent.
       </figcaption>
     </figure>
   )

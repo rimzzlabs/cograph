@@ -5,12 +5,14 @@ import { cn } from "@/lib/utils"
 export function LandingClosing() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 pt-8 pb-24">
-      <p className="max-w-[40ch] font-bold text-2xl text-ink tracking-tight">
-        The demo room is public. Bring your agent.
-      </p>
-      <Link to="/r/demo" className={cn(buttonVariants({ size: "lg" }), "mt-6")}>
-        Open the board
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-line bg-surface p-8 shadow-soft sm:p-10">
+        <p className="max-w-[26ch] font-landing-display font-semibold text-2xl text-ink tracking-tight">
+          The demo room is public. Bring your agent.
+        </p>
+        <Link to="/r/demo" className={cn(buttonVariants({ size: "lg" }), "cursor-pointer")}>
+          Open the board
+        </Link>
+      </div>
     </section>
   )
 }

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react"
 import { Link } from "react-router"
+import { ExternalLink } from "@/components/external-link"
 import { LandingBoardFigure } from "@/components/landing/landing-board-figure"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -36,7 +37,7 @@ export function LandingHero() {
             >
               Browse the rooms
             </Link>
-            <a
+            <ExternalLink
               href="https://github.com/rimzzlabs/cograph"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
@@ -44,7 +45,7 @@ export function LandingHero() {
               )}
             >
               Read the source
-            </a>
+            </ExternalLink>
           </div>
           <ul
             className="landing-rise mt-8 flex flex-wrap items-center gap-2"

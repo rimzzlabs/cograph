@@ -2,21 +2,19 @@ import "@fontsource-variable/jetbrains-mono"
 import "@fontsource/ibm-plex-sans/400.css"
 import "@fontsource/ibm-plex-sans/500.css"
 import "@fontsource/ibm-plex-sans/600.css"
-import { ArrowLeft } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router"
+import { BrandMark } from "@/components/brand-mark"
 import { LandingLabel } from "@/components/landing/landing-label"
 import { RoomsCreateForm } from "@/components/rooms/rooms-create-form"
 import { RoomsRoomCard } from "@/components/rooms/rooms-room-card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { buttonVariants } from "@/components/ui/button"
 import {
   deleteRoom,
   fetchRoomsDirectory,
   type RoomsDirectory,
   type RoomsResult,
 } from "@/lib/rooms/api"
-import { cn } from "@/lib/utils"
 
 export function RoomsRoute() {
   const [directory, setDirectory] = useState<RoomsResult<RoomsDirectory> | null>(null)
@@ -53,16 +51,14 @@ export function RoomsRoute() {
           <div className="flex items-center gap-3">
             <Link
               to="/"
-              aria-label="Back to the landing page"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "icon-sm" }),
-                "cursor-pointer",
-              )}
+              aria-label="Cograph home"
+              className="cursor-pointer rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <ArrowLeft aria-hidden="true" />
+              <BrandMark />
             </Link>
-            <span className="font-landing-display font-semibold text-ink text-sm">cograph</span>
-            <span className="font-landing-display text-ink-muted text-sm">/ rooms</span>
+            <span className="font-landing-display text-ink-muted text-sm">
+              / <span className="text-ink">rooms</span>
+            </span>
           </div>
           <ThemeToggle />
         </div>

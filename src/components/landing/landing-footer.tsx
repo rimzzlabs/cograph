@@ -1,4 +1,5 @@
 import { Link } from "react-router"
+import { BrandMark } from "@/components/brand-mark"
 
 interface FooterLink {
   label: string
@@ -69,15 +70,7 @@ export function LandingFooter() {
         <div className="flex flex-wrap items-start justify-between gap-x-16 gap-y-10">
           <div className="min-w-0 max-w-sm">
             <span className="flex items-center gap-2.5 font-landing-display font-semibold text-ink text-xl">
-              <svg viewBox="0 0 64 64" className="size-6" aria-hidden="true" focusable="false">
-                <g fill="none" stroke="var(--color-human)" strokeWidth="3.2" strokeLinecap="round">
-                  <path d="M14 18 L36 28" />
-                  <path d="M14 46 L36 28" />
-                </g>
-                <circle cx="14" cy="18" r="6.5" fill="var(--color-human)" />
-                <circle cx="14" cy="46" r="6.5" fill="var(--color-human)" />
-                <path d="M36 28 L57 36 L47 39 L44 49 Z" fill="var(--color-agent)" />
-              </svg>
+              <BrandMark className="size-6" />
               cograph
             </span>
             <p className="mt-4 text-ink-muted text-sm leading-relaxed">

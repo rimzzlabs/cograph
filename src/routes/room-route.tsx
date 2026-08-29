@@ -1,8 +1,10 @@
+import { ArrowLeft } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
 import type { CursorMarker } from "@/components/board/board-cursor-layer"
+import { BrandMark } from "@/components/brand-mark"
 import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
 import { ShareViewLink } from "@/components/presence/share-view-link"
@@ -168,12 +170,23 @@ function RoomSession(props: { roomId: string }) {
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-line border-b bg-surface px-4 py-2">
         <div className="flex items-center gap-2">
-          <div>
-            <h1 className="font-semibold text-ink text-sm">Cograph</h1>
-            <p className="text-ink-muted text-xs">
-              room <code className="font-mono">{roomId}</code>
-            </p>
-          </div>
+          <Link
+            to="/rooms"
+            aria-label="Back to the room list"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }), "cursor-pointer")}
+          >
+            <ArrowLeft aria-hidden="true" />
+          </Link>
+          <Link
+            to="/"
+            aria-label="Cograph home"
+            className="cursor-pointer rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <BrandMark />
+          </Link>
+          <h1 className="font-semibold text-ink text-sm">
+            <span className="text-ink-muted">/</span> {roomId}
+          </h1>
           {me.role === "viewer" ? <Badge variant="secondary">read-only</Badge> : null}
         </div>
         <div className="flex items-center gap-2">

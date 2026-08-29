@@ -1,3 +1,5 @@
+import { LandingLabel } from "@/components/landing/landing-label"
+
 interface LandingFeature {
   number: string
   title: string
@@ -40,7 +42,8 @@ const FEATURES: LandingFeature[] = [
 export function LandingFeatures() {
   return (
     <section id="board" className="mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-24">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <LandingLabel>on_the_board</LandingLabel>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
           More than a drawing surface
         </h2>

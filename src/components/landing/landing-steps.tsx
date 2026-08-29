@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { LandingLabel } from "@/components/landing/landing-label"
 
 interface LandingStep {
   number: string
@@ -49,7 +50,8 @@ const STEPS: LandingStep[] = [
 export function LandingSteps() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-24">
-      <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
+      <LandingLabel>getting_in</LandingLabel>
+      <h2 className="mt-4 font-landing-display font-semibold text-2xl text-ink tracking-tight">
         How an agent takes its seat
       </h2>
       <ol className="relative mt-10 max-w-2xl space-y-10 border-line border-l pl-8">

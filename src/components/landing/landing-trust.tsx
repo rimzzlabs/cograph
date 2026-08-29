@@ -1,5 +1,6 @@
 import { Eye, ShieldAlert, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
+import { LandingLabel } from "@/components/landing/landing-label"
 
 interface ToolHint {
   name: string
@@ -29,7 +30,7 @@ export function LandingTrust() {
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-20 lg:grid-cols-2 lg:items-center">
       {/* Always-dark code panel: the `dark` class flips the tokens inside. */}
-      <div className="dark min-w-0 overflow-x-auto rounded-2xl border border-line bg-canvas p-5 shadow-soft lg:order-1">
+      <div className="dark landing-code-glow min-w-0 overflow-x-auto rounded-2xl border border-line bg-canvas p-5 lg:order-1">
         <pre className="font-landing-display text-[0.78rem] text-ink leading-relaxed">
           <code>
             {`modelContext.registerTool(
@@ -55,7 +56,8 @@ export function LandingTrust() {
       </div>
 
       <div className="min-w-0 lg:order-2">
-        <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
+        <LandingLabel>trust_model</LandingLabel>
+        <h2 className="mt-4 font-landing-display font-semibold text-2xl text-ink tracking-tight">
           Trust is written on the tools
         </h2>
         <p className="mt-5 max-w-[52ch] text-ink-muted leading-relaxed">

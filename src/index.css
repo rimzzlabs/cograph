@@ -226,6 +226,51 @@
   animation-play-state: paused;
 }
 
+/* The view layer: glow fields, grain, and the human-to-agent gradient that
+   signs the brand. Every colour comes through color-mix on the palette
+   tokens, so both themes tint the effects. */
+.landing-glow-field {
+  background-image:
+    radial-gradient(
+      42rem 28rem at 16% 8%,
+      color-mix(in oklab, var(--color-human) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40rem 26rem at 88% 36%,
+      color-mix(in oklab, var(--color-agent) 13%, transparent),
+      transparent 70%
+    );
+}
+
+.landing-grain {
+  position: relative;
+}
+
+.landing-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.landing-label {
+  color: color-mix(in oklab, var(--color-agent) 72%, var(--color-ink));
+}
+
+.landing-rule-gradient {
+  background: linear-gradient(90deg, var(--color-human), var(--color-agent));
+}
+
+.landing-cta-glow {
+  box-shadow: 0 0 28px -4px color-mix(in oklab, var(--color-human) 45%, transparent);
+}
+
+.landing-code-glow {
+  box-shadow: 0 0 36px -8px color-mix(in oklab, var(--color-agent) 35%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-rise,
   .landing-agent-drift {

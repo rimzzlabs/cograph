@@ -5,10 +5,11 @@
  */
 export function LandingWhy() {
   return (
-    <section id="why" className="dark scroll-mt-24 border-line border-y bg-canvas">
+    <section id="why" className="dark landing-grain scroll-mt-24 border-line border-y bg-canvas">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-28 lg:grid-cols-2">
         <div className="min-w-0">
-          <h2 className="font-landing-display text-ink-muted text-sm">Why this exists</h2>
+          <h2 className="landing-label font-landing-display font-medium text-xs">why_it_exists</h2>
+          <span className="landing-rule-gradient mt-2 block h-px w-10" aria-hidden="true" />
           <p className="mt-6 max-w-[18ch] font-landing-display font-semibold text-[clamp(1.9rem,2.6vw+0.8rem,3rem)] text-ink leading-[1.15] tracking-tight">
             The browser tab is the shared context.
           </p>

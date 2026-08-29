@@ -1,3 +1,4 @@
+import { LandingLabel } from "@/components/landing/landing-label"
 import { Badge } from "@/components/ui/badge"
 
 interface ToolSurfaceRow {
@@ -32,7 +33,8 @@ export function LandingToolSurface() {
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <div className="min-w-0">
-        <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
+        <LandingLabel>agent_tool_surface</LandingLabel>
+        <h2 className="mt-4 font-landing-display font-semibold text-2xl text-ink tracking-tight">
           The tool surface follows the UI
         </h2>
         <p className="mt-5 max-w-[52ch] text-ink-muted leading-relaxed">

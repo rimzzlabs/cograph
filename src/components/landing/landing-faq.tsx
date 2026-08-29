@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react"
+import { LandingLabel } from "@/components/landing/landing-label"
 
 interface FaqItem {
   question: string
@@ -37,7 +38,8 @@ export function LandingFaq() {
   return (
     <section id="faq" className="mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-24">
       <div className="max-w-2xl">
-        <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
+        <LandingLabel>honest_questions</LandingLabel>
+        <h2 className="mt-4 font-landing-display font-semibold text-2xl text-ink tracking-tight">
           Questions you should ask
         </h2>
         <p className="mt-4 text-ink-muted leading-relaxed">

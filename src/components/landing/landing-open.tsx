@@ -1,3 +1,6 @@
+import { LandingLabel } from "@/components/landing/landing-label"
+import { cn } from "@/lib/utils"
+
 interface OpenStat {
   value: string
   label: string
@@ -16,7 +19,8 @@ export function LandingOpen() {
       <div className="mx-auto w-full max-w-6xl px-6 py-20">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
-            <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
+            <LandingLabel>run_in_the_open</LandingLabel>
+            <h2 className="mt-4 font-landing-display font-semibold text-2xl text-ink tracking-tight">
               An experiment, run in the open
             </h2>
             <p className="mt-4 max-w-[56ch] text-ink-muted leading-relaxed">
@@ -34,9 +38,14 @@ export function LandingOpen() {
         </div>
 
         <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
-          {OPEN_STATS.map((stat) => (
+          {OPEN_STATS.map((stat, index) => (
             <div key={stat.label} className="min-w-0 border-line border-t pt-5">
-              <dd className="font-landing-display font-semibold text-5xl text-ink tabular-nums tracking-tight">
+              <dd
+                className={cn(
+                  "font-landing-display font-semibold text-5xl tabular-nums tracking-tight",
+                  index % 2 === 0 ? "text-human" : "text-agent",
+                )}
+              >
                 {stat.value}
               </dd>
               <dt className="mt-2 text-ink-muted text-sm">{stat.label}</dt>

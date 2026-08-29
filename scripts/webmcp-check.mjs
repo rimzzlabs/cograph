@@ -82,6 +82,9 @@ const browser = spawn(
     "--no-first-run",
     "--enable-webmcp-testing",
     "--enable-features=WebMCP,WebMCPTesting,DeclarativeWebmcp",
+    // Chrome for Testing 152 on macOS also needs the Blink runtime features
+    // switched on, or document.modelContext never appears.
+    "--enable-blink-features=WebMCP,WebMCPTesting",
     `http://127.0.0.1:${APP_PORT}/r/e2e`,
   ],
   { stdio: "ignore" },

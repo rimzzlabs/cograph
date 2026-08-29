@@ -687,6 +687,30 @@ line).
 
 ---
 
+## 031 — A still peer keeps their cursor for five minutes
+
+**Date:** 2026-08-29
+
+A peer's cursor vanished the moment their pointer left the canvas, because the leave handler
+published a null cursor. A person who paused to read the inspector looked gone, while their ring
+still said online. The two signals disagreed.
+
+The cursor now stays published at its last position. The read side owns expiry: one shared idle
+window of five minutes, in `src/lib/presence/idle.ts`, retires the cursor and the online ring
+together. A peer who stays still keeps a visible cursor and an online ring. Past the window both
+go away at once, and any real input brings both back. A closed tab still disappears immediately,
+because the server drops its whole awareness state.
+
+The old online window was one minute, from entry 016. Five minutes replaces it for both signals.
+The 10 second `lastActiveAt` publish throttle stays, because it resolves five minutes finely
+enough.
+
+**Rejected:** clearing the cursor on pointer leave and keeping it on idle only (a peer reading a
+panel beside the canvas is present, and their cursor position is still true); a second window for
+the cursor separate from the ring (two clocks would let the cursor and the ring disagree again).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 const ACTIVITY_EVENTS = ["pointermove", "pointerdown", "keydown", "wheel"] as const
 
-/** One awareness write per interval is plenty for a 1-minute idle window. */
+/** One awareness write per interval is plenty for a 5-minute idle window. */
 const PUBLISH_INTERVAL_MS = 10_000
 
 /**

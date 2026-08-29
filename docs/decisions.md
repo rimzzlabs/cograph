@@ -627,6 +627,35 @@ application. The tags name one host, so a card is always built from the canonica
 
 ---
 
+## 029 — Give the static shell something true to say
+
+**Date:** 2026-08-29
+
+A test asked ChatGPT to fetch `https://cograph.rimzzlabs.com/r/demo`. The answer was correct and
+useless: "essentially an empty JavaScript application shell". The body held 33 characters,
+`<div id="root"></div>`.
+
+The test itself was invalid. A fetch is an HTTP GET. It runs no JavaScript, so it reaches no
+browsing context, so `document.modelContext` does not exist and no tool is registered. Every WebMCP
+page answers a fetch this way. The tools need a browser.
+
+The risk is real even so. A judge can run the same fetch, and an empty shell is a poor first answer
+from a project whose thesis is that a page must be legible to an agent.
+
+`index.html` now carries a static description inside `#root`: what Cograph is, why a fetch sees no
+tools, which browsers ship the API, and the full state-to-tools table. `createRoot` clears the
+container on mount, so a person with JavaScript never sees this text. The body grows from 33
+characters to about 2800, and the whole document gzips to 2.2 kB.
+
+The shell sets no colour. With the stylesheet the page paints light text on the dark canvas. Without
+it the browser default paints black on white. The text stays readable in both cases.
+
+**Rejected:** server-side rendering of the real board (it needs the Durable Object and a Yjs
+snapshot per request, for a page that no human reads); a `noscript` block alone (a fetcher reads the
+shell, and most fetchers ignore `noscript`).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

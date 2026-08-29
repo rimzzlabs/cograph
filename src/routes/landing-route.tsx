@@ -9,12 +9,16 @@ import "@fontsource/ibm-plex-sans/400.css"
 import "@fontsource/ibm-plex-sans/500.css"
 import "@fontsource/ibm-plex-sans/600.css"
 import { LandingClosing } from "@/components/landing/landing-closing"
+import { LandingFaq } from "@/components/landing/landing-faq"
+import { LandingFeatures } from "@/components/landing/landing-features"
 import { LandingFooter } from "@/components/landing/landing-footer"
 import { LandingHero } from "@/components/landing/landing-hero"
 import { LandingNav } from "@/components/landing/landing-nav"
+import { LandingOpen } from "@/components/landing/landing-open"
 import { LandingSteps } from "@/components/landing/landing-steps"
 import { LandingToolSurface } from "@/components/landing/landing-tool-surface"
 import { LandingTrust } from "@/components/landing/landing-trust"
+import { LandingWhy } from "@/components/landing/landing-why"
 
 export function LandingRoute() {
   return (
@@ -22,9 +26,13 @@ export function LandingRoute() {
       <LandingNav />
       <main className="flex-1">
         <LandingHero />
+        <LandingWhy />
         <LandingToolSurface />
+        <LandingFeatures />
         <LandingTrust />
         <LandingSteps />
+        <LandingOpen />
+        <LandingFaq />
         <LandingClosing />
       </main>
       <LandingFooter />

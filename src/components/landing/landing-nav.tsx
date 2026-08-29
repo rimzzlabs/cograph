@@ -23,6 +23,27 @@ export function LandingNav() {
           cograph
         </Link>
 
+        <nav aria-label="Page sections" className="hidden items-center gap-5 md:flex">
+          <a
+            href="#why"
+            className="cursor-pointer whitespace-nowrap rounded-md text-ink-muted text-sm outline-none transition-colors duration-200 hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            Why
+          </a>
+          <a
+            href="#board"
+            className="cursor-pointer whitespace-nowrap rounded-md text-ink-muted text-sm outline-none transition-colors duration-200 hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            The board
+          </a>
+          <a
+            href="#faq"
+            className="cursor-pointer whitespace-nowrap rounded-md text-ink-muted text-sm outline-none transition-colors duration-200 hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            FAQ
+          </a>
+        </nav>
+
         <div className="flex items-center gap-2">
           <a
             href="https://github.com/rimzzlabs/cograph"

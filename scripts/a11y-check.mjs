@@ -256,5 +256,38 @@ check(
   String(liveAfter),
 )
 
+// --- Real Tab traversal: focus must be reachable and visible ---
+await evaluate(`document.body.focus()`)
+let tabbedToNode = false
+for (let press = 0; press < 40 && !tabbedToNode; press += 1) {
+  await key({ key: "Tab", code: "Tab", keyCode: 9 })
+  tabbedToNode = await evaluate(
+    `document.activeElement?.classList?.contains("react-flow__node") === true`,
+  )
+}
+check("Tab reaches a node", tabbedToNode)
+check(
+  "keyboard focus on a node shows a visible outline",
+  await evaluate(`getComputedStyle(document.activeElement).outlineStyle !== "none"`),
+  await evaluate(`getComputedStyle(document.activeElement).outlineStyle`),
+)
+
+// --- Arrow keys move the selected node ---
+// React Flow moves selected nodes only, so select the focused node first.
+const alreadySelected = await evaluate(`document.activeElement.classList.contains("selected")`)
+if (!alreadySelected) {
+  await key({ key: "Enter", code: "Enter", keyCode: 13 })
+  await wait(200)
+}
+const transformBefore = await evaluate(`document.activeElement.style.transform`)
+await key({ key: "ArrowRight", code: "ArrowRight", keyCode: 39 })
+await wait(300)
+const transformAfter = await evaluate(`document.activeElement.style.transform`)
+check(
+  "arrow key moves the selected node",
+  transformBefore !== transformAfter,
+  `${transformBefore} -> ${transformAfter}`,
+)
+
 ws.close()
 cleanup(failed ? 1 : 0)

@@ -734,6 +734,29 @@ collides with the context menu on macOS, and a product change must not exist to 
 
 ---
 
+## 033 — Restore the keyboard focus ring that React Flow removes
+
+**Date:** 2026-08-29
+
+Manual testing found the gap that entry 032's fix did not: Tab reached the nodes, but nothing
+showed it. React Flow's stylesheet sets `outline: none` on focused nodes. The keyboard model
+worked and looked dead — a focused node showed nothing, so Enter and the arrow keys seemed
+broken too. The arrows move a selected node only, and nobody can select what they cannot see.
+
+One CSS rule restores the ring on `:focus-visible`: 2 px in the ring colour, 2 px offset, on the
+node wrapper with the card's radius. A mouse click still shows no ring. The kind-coloured
+selection halo stays separate, so focus and selection read as two different states.
+
+The a11y check now drives real Tab traversal instead of programmatic focus, and asserts three new
+things: Tab reaches a node, the focused node has a visible outline, and an arrow key moves the
+selected node. 13 checks pass.
+
+**Rejected:** arrow-key movement for a focused but unselected node (React Flow moves selected
+nodes, and with a visible ring the focus, Enter, arrows sequence is discoverable); styling bare
+`:focus` (a mouse click would then ring every node it selects).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

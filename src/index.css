@@ -145,3 +145,13 @@
   --xy-edge-stroke: var(--color-line);
   --xy-edge-stroke-selected: var(--color-human);
 }
+
+/* React Flow ships `outline: none` for focused nodes, which hides keyboard
+   focus entirely. Restore the ring for keyboard focus only: a mouse click
+   still shows no ring, and the kind-coloured selection halo stays separate.
+   The wrapper takes the card's radius so the ring follows its shape. */
+.react-flow__node.selectable:focus-visible {
+  border-radius: var(--radius-xl);
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}

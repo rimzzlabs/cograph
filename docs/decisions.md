@@ -711,6 +711,29 @@ the cursor separate from the ring (two clocks would let the cursor and the ring 
 
 ---
 
+## 032 — The a11y check speaks the platform's multi-select key
+
+**Date:** 2026-08-29
+
+`pnpm test:a11y` failed 4 checks on macOS: the keyboard multi-select selected one node, so the
+keyboard connect flow never ran. The failure looked like an app regression and was not one.
+
+React Flow's `multiSelectionKeyCode` is platform-native: Meta on macOS, Control elsewhere. The
+check dispatched Control on every platform, so it only passed where Control is the multi-select
+key. The check now picks the key from `process.platform`. All 10 checks pass on macOS again.
+
+The app does not change. Command-click is the macOS convention, and Control-click on macOS means
+right-click, which the board already uses for the context menu.
+
+This is the second check that was verified on one platform and failed on another — the WebMCP
+check needed an extra Blink flag on macOS (PR #23). Treat "verified" entries in this file as
+verified on the platform of that day's machine.
+
+**Rejected:** pinning `multiSelectionKeyCode` to both Meta and Control in the app (Control-click
+collides with the context menu on macOS, and a product change must not exist to satisfy a test).
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

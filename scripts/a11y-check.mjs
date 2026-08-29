@@ -200,22 +200,28 @@ check(
 await evaluate(`document.querySelectorAll(".react-flow__node")[0].focus()`)
 await key({ key: "Enter", code: "Enter", keyCode: 13 })
 await wait(200)
-// React Flow reads the multi-select modifier from window key events; hold
-// Control while selecting the second node.
+// React Flow reads the multi-select modifier from window key events, and the
+// key is platform-native: Meta on macOS, Control elsewhere. Dispatch the key
+// for the platform the check runs on, or the second Enter replaces the
+// selection instead of adding to it.
+const multiKey =
+  process.platform === "darwin"
+    ? { key: "Meta", code: "MetaLeft", windowsVirtualKeyCode: 91, modifiers: 4 }
+    : { key: "Control", code: "ControlLeft", windowsVirtualKeyCode: 17, modifiers: 2 }
 await send("Input.dispatchKeyEvent", {
   type: "rawKeyDown",
-  key: "Control",
-  code: "ControlLeft",
-  windowsVirtualKeyCode: 17,
-  modifiers: 2,
+  key: multiKey.key,
+  code: multiKey.code,
+  windowsVirtualKeyCode: multiKey.windowsVirtualKeyCode,
+  modifiers: multiKey.modifiers,
 })
 await evaluate(`document.querySelectorAll(".react-flow__node")[1].focus()`)
-await key({ key: "Enter", code: "Enter", keyCode: 13, modifiers: 2 })
+await key({ key: "Enter", code: "Enter", keyCode: 13, modifiers: multiKey.modifiers })
 await send("Input.dispatchKeyEvent", {
   type: "keyUp",
-  key: "Control",
-  code: "ControlLeft",
-  windowsVirtualKeyCode: 17,
+  key: multiKey.key,
+  code: multiKey.code,
+  windowsVirtualKeyCode: multiKey.windowsVirtualKeyCode,
 })
 await wait(200)
 const selected = await evaluate(`document.querySelectorAll(".react-flow__node.selected").length`)

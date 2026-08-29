@@ -52,17 +52,14 @@ export function LandingSteps() {
       <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
         How an agent takes its seat
       </h2>
-      <ol className="mt-10 grid gap-6 sm:grid-cols-3">
+      <ol className="relative mt-10 max-w-2xl space-y-10 border-line border-l pl-8">
         {STEPS.map((step) => (
-          <li
-            key={step.number}
-            className="min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-soft transition-transform duration-200 ease-out hover:-translate-y-0.5"
-          >
-            <span className="inline-flex size-8 items-center justify-center rounded-md border border-line bg-surface-raised font-landing-display text-ink-muted text-sm">
+          <li key={step.number} className="relative min-w-0">
+            <span className="-left-11 absolute top-0 flex size-6 items-center justify-center rounded-full border border-line bg-surface font-landing-display text-[0.6rem] text-ink-muted">
               {step.number}
             </span>
-            <h3 className="mt-4 font-medium text-ink">{step.title}</h3>
-            <p className="mt-2 text-ink-muted text-sm leading-relaxed">{step.body}</p>
+            <h3 className="font-medium text-ink">{step.title}</h3>
+            <p className="mt-2 max-w-[58ch] text-ink-muted text-sm leading-relaxed">{step.body}</p>
           </li>
         ))}
       </ol>

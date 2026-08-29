@@ -1,22 +1,100 @@
+import { Link } from "react-router"
+
+interface FooterLink {
+  label: string
+  href: string
+  external?: boolean
+}
+
+const PROJECT_LINKS: FooterLink[] = [
+  { label: "GitHub", href: "https://github.com/rimzzlabs/cograph", external: true },
+  {
+    label: "Decision log",
+    href: "https://github.com/rimzzlabs/cograph/blob/main/docs/decisions.md",
+    external: true,
+  },
+  {
+    label: "MIT license",
+    href: "https://github.com/rimzzlabs/cograph/blob/main/LICENSE",
+    external: true,
+  },
+]
+
+const PROTOCOL_LINKS: FooterLink[] = [
+  {
+    label: "WebMCP proposal",
+    href: "https://github.com/webmachinelearning/webmcp",
+    external: true,
+  },
+  { label: "The demo room", href: "/r/demo" },
+  { label: "View-only link", href: "/r/demo?role=viewer" },
+]
+
+function FooterColumn(props: { heading: string; links: FooterLink[] }) {
+  return (
+    <div className="min-w-0">
+      <h3 className="font-landing-display text-ink-muted text-xs uppercase tracking-wider">
+        {props.heading}
+      </h3>
+      <ul className="mt-4 space-y-2.5">
+        {props.links.map((link) => (
+          <li key={link.label}>
+            {link.external ? (
+              <a
+                href={link.href}
+                className="cursor-pointer whitespace-nowrap rounded-sm text-ink-muted text-sm outline-none transition-colors duration-200 hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                to={link.href}
+                className="cursor-pointer whitespace-nowrap rounded-sm text-ink-muted text-sm outline-none transition-colors duration-200 hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {link.label}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function LandingFooter() {
   return (
-    <footer className="border-line border-t">
-      <p className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-6 py-6 text-ink-muted text-sm">
-        <span className="font-landing-display text-ink">cograph</span>
-        <span aria-hidden="true">·</span>
-        <span>a shared architecture graph</span>
-        <span aria-hidden="true">·</span>
-        <span>Yjs + React Flow + Durable Objects</span>
-        <span aria-hidden="true">·</span>
-        <span>MIT license</span>
-        <span aria-hidden="true">·</span>
-        <a
-          href="https://github.com/rimzzlabs/cograph"
-          className="whitespace-nowrap rounded-sm text-ink underline decoration-line underline-offset-4 outline-none transition-colors duration-200 hover:decoration-ink focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          GitHub ↗
-        </a>
-      </p>
+    <footer className="border-line border-t bg-surface">
+      <div className="mx-auto w-full max-w-6xl px-6 py-14">
+        <div className="flex flex-wrap items-start justify-between gap-x-16 gap-y-10">
+          <div className="min-w-0 max-w-sm">
+            <span className="flex items-center gap-2.5 font-landing-display font-semibold text-ink text-xl">
+              <svg viewBox="0 0 64 64" className="size-6" aria-hidden="true" focusable="false">
+                <g fill="none" stroke="var(--color-human)" strokeWidth="3.2" strokeLinecap="round">
+                  <path d="M14 18 L36 28" />
+                  <path d="M14 46 L36 28" />
+                </g>
+                <circle cx="14" cy="18" r="6.5" fill="var(--color-human)" />
+                <circle cx="14" cy="46" r="6.5" fill="var(--color-human)" />
+                <path d="M36 28 L57 36 L47 39 L44 49 Z" fill="var(--color-agent)" />
+              </svg>
+              cograph
+            </span>
+            <p className="mt-4 text-ink-muted text-sm leading-relaxed">
+              A shared architecture graph where your agent has a cursor. People and AI agents edit
+              the same board at the same time.
+            </p>
+          </div>
+
+          <div className="flex gap-x-16 gap-y-10">
+            <FooterColumn heading="Project" links={PROJECT_LINKS} />
+            <FooterColumn heading="Protocol" links={PROTOCOL_LINKS} />
+          </div>
+        </div>
+
+        <p className="mt-12 border-line border-t pt-6 text-ink-muted text-xs">
+          Built on Yjs, React Flow, and Cloudflare Durable Objects · © 2026 rimzzlabs
+        </p>
+      </div>
     </footer>
   )
 }

@@ -35,32 +35,29 @@ const FAQ_ITEMS: FaqItem[] = [
 
 export function LandingFaq() {
   return (
-    <section
-      id="faq"
-      className="mx-auto grid w-full max-w-6xl scroll-mt-24 gap-12 px-6 py-20 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
-    >
-      <div className="min-w-0">
+    <section id="faq" className="mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-24">
+      <div className="max-w-2xl">
         <h2 className="font-landing-display font-semibold text-2xl text-ink tracking-tight">
           Questions you should ask
         </h2>
-        <p className="mt-4 max-w-[40ch] text-ink-muted leading-relaxed">
+        <p className="mt-4 text-ink-muted leading-relaxed">
           Honest answers, because the demo is public and the API is a draft.
         </p>
-      </div>
 
-      <div className="min-w-0 rounded-2xl border border-line bg-surface shadow-soft">
-        {FAQ_ITEMS.map((item) => (
-          <details key={item.question} className="group border-line border-b last:border-0">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-md px-5 py-4 font-medium text-ink text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
-              {item.question}
-              <ChevronDown
-                aria-hidden="true"
-                className="size-4 shrink-0 text-ink-muted transition-transform duration-200 ease-out group-open:rotate-180"
-              />
-            </summary>
-            <p className="px-5 pb-4 text-ink-muted text-sm leading-relaxed">{item.answer}</p>
-          </details>
-        ))}
+        <div className="mt-8">
+          {FAQ_ITEMS.map((item) => (
+            <details key={item.question} className="group border-line border-t last:border-b">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-medium text-ink text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+                {item.question}
+                <ChevronDown
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-ink-muted transition-transform duration-200 ease-out group-open:rotate-180"
+                />
+              </summary>
+              <p className="pb-5 text-ink-muted text-sm leading-relaxed">{item.answer}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   )

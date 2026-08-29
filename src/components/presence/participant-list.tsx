@@ -1,20 +1,15 @@
 import { PencilIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { ParticipantAvatar } from "@/components/presence/participant-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { IDLE_RECHECK_INTERVAL_MS, isOnline, useNow } from "@/lib/presence/idle"
 import type { PresenceState } from "@/lib/presence/use-presence"
 import { cn } from "@/lib/utils"
 import type { Participant } from "@/stores/session-store"
 
 const FALLBACK_COLOR = "oklch(0.74 0.15 300)"
-
-/** Idle for longer than this counts as offline, and the ring goes away. */
-const ONLINE_WINDOW_MS = 60_000
-
-/** How often the rings re-check, so they expire without any local input. */
-const RECHECK_INTERVAL_MS = 15_000
 
 const MAX_STACK_SIZE = 5
 
@@ -36,7 +31,7 @@ interface Member {
 export function ParticipantList(props: ParticipantListProps) {
   const { me, meLastActiveAt, others, colors, status, onEditName } = props
 
-  const now = useNow(RECHECK_INTERVAL_MS)
+  const now = useNow(IDLE_RECHECK_INTERVAL_MS)
   const [open, setOpen] = useState(false)
 
   const members: Member[] = [
@@ -157,20 +152,4 @@ function ParticipantListRow(props: ParticipantListRowProps) {
       ) : null}
     </li>
   )
-}
-
-function isOnline(lastActiveAt: number | null, now: number) {
-  return lastActiveAt !== null && now - lastActiveAt <= ONLINE_WINDOW_MS
-}
-
-/** A clock the rings can watch: re-renders on an interval, nothing else. */
-function useNow(intervalMs: number) {
-  const [now, setNow] = useState(() => Date.now())
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), intervalMs)
-    return () => clearInterval(id)
-  }, [intervalMs])
-
-  return now
 }

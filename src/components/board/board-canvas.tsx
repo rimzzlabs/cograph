@@ -230,13 +230,15 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     [onCursorMove, screenToFlowPosition],
   )
 
+  // The cursor stays published at its last position on purpose. A still peer
+  // keeps a visible cursor; the idle window on the read side retires it after
+  // IDLE_TIMEOUT_MS, and a closed tab drops its whole awareness state.
   const onPointerLeave = useCallback(() => {
     if (cursorFrame.current !== null) {
       cancelAnimationFrame(cursorFrame.current)
       cursorFrame.current = null
     }
-    onCursorMove(null)
-  }, [onCursorMove])
+  }, [])
 
   function openPaneMenu(event: React.MouseEvent | MouseEvent) {
     event.preventDefault()

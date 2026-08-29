@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { useBoardAnnouncements } from "@/lib/graph/use-board-announcements"
 import { useParticipantColors } from "@/lib/identity/use-participant-colors"
 import { useBoardTools } from "@/lib/mcp/use-board-tools"
+import { IDLE_RECHECK_INTERVAL_MS, isOnline, useNow } from "@/lib/presence/idle"
 import { useLastActiveAt } from "@/lib/presence/use-last-active"
 import { type AgentPresence, publishCursor, usePresence } from "@/lib/presence/use-presence"
 import { useBoardConnection, useBoardSnapshot, useConnectionStatus } from "@/lib/yjs/use-board"
@@ -96,10 +97,14 @@ export function RoomRoute() {
     meId: me.id,
   })
 
+  // A still peer keeps a visible cursor; only one idle past the window loses
+  // it, together with the online ring. The clock re-checks on an interval, so
+  // cursors also expire while nothing else re-renders.
+  const now = useNow(IDLE_RECHECK_INTERVAL_MS)
   const cursors = useMemo<CursorMarker[]>(
     () =>
       roster
-        .filter((entry) => entry.cursor !== null)
+        .filter((entry) => entry.cursor !== null && isOnline(entry.lastActiveAt, now))
         .map((entry) => ({
           id: entry.participant.id,
           name: entry.participant.name,
@@ -107,7 +112,7 @@ export function RoomRoute() {
           color: colors.get(entry.participant.id) ?? "oklch(0.74 0.15 240)",
           cursor: entry.cursor as { x: number; y: number },
         })),
-    [roster, colors],
+    [roster, colors, now],
   )
 
   const onCursorMove = useCallback(

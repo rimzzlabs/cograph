@@ -68,7 +68,8 @@ export function useBoardTools(params: UseBoardToolsParams) {
                   return `${edge.kind} ${target?.data.label ?? "?"}`
                 })
               const deps = outgoing.length > 0 ? ` → ${outgoing.join(", ")}` : ""
-              return `- ${node.data.label} (${node.data.kind})${deps}`
+              const down = node.data.status === "down" ? " [DOWN]" : ""
+              return `- ${node.data.label} (${node.data.kind})${down}${deps}`
             })
 
             return textResult(
@@ -229,6 +230,80 @@ export function useBoardTools(params: UseBoardToolsParams) {
             })
             pointAgentAt(node)
             return textResult(`Added ${label}.`)
+          },
+        }
+      : null,
+  )
+
+  const downNodes = snapshot.nodes.filter((node) => node.data.status === "down")
+
+  useAgentTool(
+    editable && board
+      ? {
+          name: "simulate_failure",
+          description:
+            "Mark the named service as down. Everyone on the board sees the outage and its blast radius until resolve_incident restores it.",
+          annotations: { idempotentHint: true },
+          inputSchema: {
+            type: "object",
+            properties: {
+              service: { type: "string", description: "Exact service label on the board." },
+            },
+            required: ["service"],
+            additionalProperties: false,
+          },
+          execute: (args) => {
+            const node = resolve(args.service)
+            if (!node) return unknownService(args.service)
+
+            pointAgentAt(node)
+            if (node.data.status !== "down") {
+              updateNode({
+                board,
+                id: node.id,
+                patch: { data: { status: "down", authorId: me.id } },
+              })
+            }
+
+            const affected = findDependents(snapshot, node.id)
+            if (affected.length === 0) {
+              return textResult(
+                `${node.data.label} is marked down. Nothing depends on it, so the blast radius is zero. Call resolve_incident to restore it.`,
+              )
+            }
+
+            const labels = affected.map(
+              (id) => snapshot.nodes.find((item) => item.id === id)?.data.label ?? id,
+            )
+            return textResult(
+              `${node.data.label} is marked down. ${affected.length} affected services are now highlighted for every participant: ${labels.join(", ")}. Call resolve_incident to restore it.`,
+            )
+          },
+        }
+      : null,
+  )
+
+  useAgentTool(
+    // The tool exists only while an incident exists — the option list itself
+    // tells the agent whether something is down.
+    editable && board && downNodes.length > 0
+      ? {
+          name: "resolve_incident",
+          description: "Restore every service that is marked down, and clear the incident.",
+          annotations: { idempotentHint: true },
+          inputSchema: { type: "object", properties: {}, additionalProperties: false },
+          execute: () => {
+            const restored = downNodes.map((node) => node.data.label)
+            for (const node of downNodes) {
+              updateNode({
+                board,
+                id: node.id,
+                patch: { data: { status: "ok", authorId: me.id } },
+              })
+            }
+            const first = downNodes[0]
+            if (first) pointAgentAt(first)
+            return textResult(`Incident resolved. Restored: ${restored.join(", ")}.`)
           },
         }
       : null,

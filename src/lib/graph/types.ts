@@ -2,6 +2,8 @@ export type ServiceKind = "service" | "datastore" | "queue" | "external" | "gate
 
 export type EdgeKind = "calls" | "reads" | "writes" | "publishes"
 
+export type ServiceStatus = "ok" | "down"
+
 export interface GraphNodeData extends Record<string, unknown> {
   label: string
   kind: ServiceKind
@@ -9,6 +11,8 @@ export interface GraphNodeData extends Record<string, unknown> {
   note: string
   /** Participant id that last wrote this node, for provenance in the UI. */
   authorId: string
+  /** Absent means ok. "down" marks a simulated failure, shared with everyone. */
+  status?: ServiceStatus
 }
 
 export interface GraphNode {

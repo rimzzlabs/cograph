@@ -360,18 +360,18 @@ participant-list fallback hue moves to 150.
 
 **Date:** 2026-08-29
 
-The user rejected the sage primary from entry 017. The primary accent is now a calm lavender
-(oklch 0.75 0.11 300). The design database returned "calm lavender" for the same calm brief, so the
-palette keeps a verified source. The sage hue moves to the agent token, which colours datastore
-nodes and chart-2. The warm stone neutrals from entry 017 stay.
+The user rejected the sage primary from entry 017. The primary accent is now a calm lavender (oklch
+0.75 0.11 300). The design database returned "calm lavender" for the same calm brief, so the palette
+keeps a verified source. The sage hue moves to the agent token, which colours datastore nodes and
+chart-2. The warm stone neutrals from entry 017 stay.
 
 The node card is rebuilt. Each service kind now has a lucide icon in a small tinted chip: Box,
 Database, Layers, Globe, and Network. The icon sits beside the visible label, so it carries
 `aria-hidden`. The kind caption is capitalised, and the label truncates instead of wrapping.
 
-The handles were 6 px dots in a near-surface colour, and users could not find them. They are now
-12 px circles with a 2 px canvas-colour border, so they read as sockets on the card edge. They tint
-to the primary on hover.
+The handles were 6 px dots in a near-surface colour, and users could not find them. They are now 12
+px circles with a 2 px canvas-colour border, so they read as sockets on the card edge. They tint to
+the primary on hover.
 
 The selection ring was a flat 2 px outline against the border. It now uses a 2 px ring with a 2 px
 canvas-colour offset, so a selected card shows a clear halo that no border colour can hide.
@@ -386,9 +386,9 @@ noisy, and the calm brief wins).
 
 **Date:** 2026-08-29
 
-Manual testing showed three faults. An edge stayed glued to its stored side, so a moved node
-dragged its edge across its own card. A node gave no hover feedback. And a click on the pane did
-not clear the selection.
+Manual testing showed three faults. An edge stayed glued to its stored side, so a moved node dragged
+its edge across its own card. A node gave no hover feedback. And a click on the pane did not clear
+the selection.
 
 Each node now has one handle per side. Every handle is type "source", and the canvas runs with
 `ConnectionMode.Loose`, so a drag between any two handles connects. The stored edge keeps only its
@@ -400,13 +400,13 @@ The edge therefore realigns during the drag, not only after release.
 
 Selection is now controlled from the session store, the same way Yjs owns the graph. The nodes and
 edges given to React Flow carry a `selected` flag computed from the store, and `onPaneClick` clears
-the store. Before this, React Flow kept selection in its internal state only, and a pane click
-could not clear what the store held. The node card also gets a hover state: a raised surface and a
-deeper shadow.
+the store. Before this, React Flow kept selection in its internal state only, and a pane click could
+not clear what the store held. The node card also gets a hover state: a raised surface and a deeper
+shadow.
 
-**Rejected:** storing the chosen handle per edge and rewriting it on drag release (write traffic
-for a render concern, and the CRDT would sync cosmetic churn); separate source and target handles
-per side (eight handles per card reads noisy, and Loose mode makes them redundant).
+**Rejected:** storing the chosen handle per edge and rewriting it on drag release (write traffic for
+a render concern, and the CRDT would sync cosmetic churn); separate source and target handles per
+side (eight handles per card reads noisy, and Loose mode makes them redundant).
 
 ---
 
@@ -414,8 +414,8 @@ per side (eight handles per card reads noisy, and Loose mode makes them redundan
 
 **Date:** 2026-08-29
 
-Entry 019 made selection controlled, and a click then showed its ring late. The ring waited for
-the next unrelated re-render, such as a cursor publish or a snapshot arrival.
+Entry 019 made selection controlled, and a click then showed its ring late. The ring waited for the
+next unrelated re-render, such as a cursor publish or a snapshot arrival.
 
 The cause sits in React Flow's controlled mode. A click mutates the internal node lookup silently
 and emits a `select` change through `onNodesChange`. React Flow does not apply the change itself.
@@ -426,9 +426,9 @@ Our handler only processed `position` and `remove`, so no React state changed at
 tick. The ring, the store, and the agent tool surface update with the click. `onSelectionChange`
 stays as a safety net for any other selection path.
 
-One more latency hid in CSS. The ring utility is a box-shadow, and the card animates box-shadow
-over 200 ms for hover. The selected state now uses an outline, which is not in the transition
-list, so it lands instantly.
+One more latency hid in CSS. The ring utility is a box-shadow, and the card animates box-shadow over
+200 ms for hover. The selected state now uses an outline, which is not in the transition list, so it
+lands instantly.
 
 ---
 
@@ -441,18 +441,18 @@ agent, but nothing explains the canvas.
 
 The top-left panel now has an Example button beside the Service button. One click seeds a small
 checkout system: a gateway, two services, a datastore, a queue, and one external service. Every
-service kind appears once, and the edges show calls, reads, and publishes. Each node's note
-teaches one gesture: drag, double-click, the four handles, the right-click menu, and Backspace.
-The view then frames the whole example.
+service kind appears once, and the edges show calls, reads, and publishes. Each node's note teaches
+one gesture: drag, double-click, the four handles, the right-click menu, and Backspace. The view
+then frames the whole example.
 
 The seed writes through the same Yjs mutations that humans and agent tools use, inside one
-transaction, so peers receive one sync burst. Labels deduplicate against the live board, so a
-second click cannot break the agent's label-based lookup. `addNode` gained an optional `note`
-field for this.
+transaction, so peers receive one sync burst. Labels deduplicate against the live board, so a second
+click cannot break the agent's label-based lookup. `addNode` gained an optional `note` field for
+this.
 
-**Rejected:** a modal tutorial (a board that shows is better than a dialog that tells, and the
-notes double as `read_service_notes` demo content); seeding only on an empty board (the demo room
-is rarely empty).
+**Rejected:** a modal tutorial (a board that shows is better than a dialog that tells, and the notes
+double as `read_service_notes` demo content); seeding only on an empty board (the demo room is
+rarely empty).
 
 ---
 
@@ -462,19 +462,46 @@ is rarely empty).
 
 A multi-select on the canvas crashed with React's "Maximum update depth exceeded".
 
-The cause was two writers on one piece of state. Entry 020 made `onNodesChange` apply select
-changes into the session store. The `onSelectionChange` prop stayed as a safety net, and it is not
-one: React Flow fires it from an effect whenever its derived selection arrays change identity.
-Every store write re-syncs the controlled props, which changes those identities, which fires the
-echo, which wrote the store again. `setSelection` assigned fresh arrays unconditionally, so the
-cycle never reached a fixed point. A single click survived only because React Flow's
-`checkEquality` kept node references stable enough to calm the effect. A multi-select did not.
+The cause was two writers on one piece of state. Entry 020 made `onNodesChange` apply select changes
+into the session store. The `onSelectionChange` prop stayed as a safety net, and it is not one:
+React Flow fires it from an effect whenever its derived selection arrays change identity. Every
+store write re-syncs the controlled props, which changes those identities, which fires the echo,
+which wrote the store again. `setSelection` assigned fresh arrays unconditionally, so the cycle
+never reached a fixed point. A single click survived only because React Flow's `checkEquality` kept
+node references stable enough to calm the effect. A multi-select did not.
 
 Two changes, and each alone breaks the loop. `onSelectionChange` is removed — select changes in
-`onNodesChange` and `onEdgesChange` are the single writer. And `setSelection` now bails out when
-the incoming ids equal the current ids. The compare ignores order on purpose: the store keeps
-click order, which `connect_selected_services` reads as direction, and React Flow echoes the same
-set in document order.
+`onNodesChange` and `onEdgesChange` are the single writer. And `setSelection` now bails out when the
+incoming ids equal the current ids. The compare ignores order on purpose: the store keeps click
+order, which `connect_selected_services` reads as direction, and React Flow echoes the same set in
+document order.
+
+---
+
+## 024 — Incident mode: a shared outage with a derived blast radius
+
+**Date:** 2026-08-29
+
+Entry 023 is on the viewer-link branch. This entry is the incident feature.
+
+A node now carries an optional `status` field in the shared document. `simulate_failure` marks a
+service down, and `resolve_incident` restores every down service. Humans get the same power in the
+node context menu, through the same mutation. A down card shows a solid danger border, a danger icon
+chip, and a "down" pill.
+
+The impact is derived, never stored. Every client walks the dependents of each down service and
+tints them amber. The old `find_blast_radius` text claimed a highlight "for everyone", and that was
+only true locally — the session store is not shared. The status flag is in the Yjs document, so the
+outage and its blast radius are now truly shared state.
+
+`resolve_incident` registers only while a service is down. The option list itself tells the agent
+whether an incident exists — the state-scoped surface from decision 007, applied to a story the
+video can tell. Impact highlight moved from danger to amber, so cause (down, danger) and effect
+(impacted, amber) read differently.
+
+**Rejected:** storing the affected set in the document (derivable state drifts, and dependents
+change when edges change mid-incident); an incident banner UI (the board already shows it, and the
+hackathon clock is real).
 
 ---
 

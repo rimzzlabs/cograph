@@ -74,14 +74,22 @@ interface ConnectNodesParams {
   kind: EdgeKind
 }
 
+/**
+ * The board holds at most one edge per (source, target) pair. Connecting an
+ * already-connected pair therefore updates its kind — never a silent no-op,
+ * and never a second parallel edge.
+ */
 export function connectNodes(params: ConnectNodesParams) {
   const { board, source, target, kind } = params
   if (!board.nodes.has(source) || !board.nodes.has(target)) return null
 
-  const duplicate = Array.from(board.edges.values()).find(
+  const existing = Array.from(board.edges.values()).find(
     (edge) => edge.source === source && edge.target === target,
   )
-  if (duplicate) return duplicate
+  if (existing) {
+    if (existing.kind !== kind) updateEdgeKind({ board, id: existing.id, kind })
+    return { ...existing, kind }
+  }
 
   const edge: GraphEdge = { id: crypto.randomUUID(), source, target, kind }
   board.doc.transact(() => {
@@ -104,4 +112,17 @@ export function updateEdgeKind(params: { board: BoardConnection; id: string; kin
   params.board.doc.transact(() => {
     params.board.edges.set(params.id, { ...existing, kind: params.kind })
   }, LOCAL_ORIGIN)
+}
+
+/** Swaps the edge's direction in place, keeping its id and kind. */
+export function reverseEdge(board: BoardConnection, id: string) {
+  const existing = board.edges.get(id)
+  if (!existing) return null
+
+  const reversed: GraphEdge = { ...existing, source: existing.target, target: existing.source }
+  board.doc.transact(() => {
+    board.edges.set(id, reversed)
+  }, LOCAL_ORIGIN)
+
+  return reversed
 }

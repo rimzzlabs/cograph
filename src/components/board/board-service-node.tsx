@@ -57,6 +57,8 @@ const HANDLES = [
 
 export interface BoardServiceNodeData extends GraphNodeData {
   highlighted: boolean
+  /** True while any agent holds this node in its published selection. */
+  agentSelected: boolean
 }
 
 export function BoardServiceNode(props: NodeProps) {
@@ -78,6 +80,9 @@ export function BoardServiceNode(props: NodeProps) {
         "hover:bg-surface-raised hover:shadow-lg hover:shadow-black/25",
         kind.border,
         props.selected && kind.outline,
+        // An agent's selection is presence, not intent to edit: dashed and in
+        // the agent colour, so it never reads as the local solid ring.
+        data.agentSelected && !props.selected && "outline-dashed outline-agent",
         // Impacted by an outage or an agent highlight: amber tint. Down
         // itself: solid danger, so cause and effect read differently.
         data.highlighted && "border-warn/70 bg-warn/10",

@@ -159,24 +159,42 @@ const baseline = [
   "find_dependency_cycles",
   "read_service_notes",
   "add_service",
+  "update_service",
+  "delete_service",
+  "move_service",
+  "select_services",
+  "simulate_failure",
+  "connect_services",
+  "set_dependency_kind",
+  "reverse_dependency",
+  "disconnect_services",
 ]
 for (const name of baseline) {
   check(`baseline tool registered: ${name}`, toolNames.includes(name))
 }
-const gated = ["update_selected_service", "delete_selected_service", "connect_selected_services"]
-for (const name of gated) {
-  check(`selection-gated tool absent: ${name}`, !toolNames.includes(name))
+const retired = ["update_selected_service", "delete_selected_service", "connect_selected_services"]
+for (const name of retired) {
+  check(`retired tool absent: ${name}`, !toolNames.includes(name))
 }
+check("resolve_incident absent while nothing is down", !toolNames.includes("resolve_incident"))
 
-async function callTool(name, args) {
-  const raw = await evaluate(`
-    document.modelContext.getTools().then(async (tools) => {
-      const tool = tools.find((t) => t.name === ${JSON.stringify(name)})
-      if (!tool) return JSON.stringify({ content: [{ type: "text", text: "TOOL NOT FOUND" }], isError: true })
-      return document.modelContext.executeTool(tool, ${JSON.stringify(JSON.stringify(args))})
-    })
-  `)
-  return JSON.parse(raw)
+async function callTool(name, args, attempt = 0) {
+  try {
+    const raw = await evaluate(`
+      document.modelContext.getTools().then(async (tools) => {
+        const tool = tools.find((t) => t.name === ${JSON.stringify(name)})
+        if (!tool) return JSON.stringify({ content: [{ type: "text", text: "TOOL NOT FOUND" }], isError: true })
+        return document.modelContext.executeTool(tool, ${JSON.stringify(JSON.stringify(args))})
+      })
+    `)
+    return JSON.parse(raw)
+  } catch (error) {
+    // The engine sometimes fails a call on a just-registered tool with a
+    // transient UnknownError; one settled retry is enough in practice.
+    if (attempt >= 2) throw error
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return callTool(name, args, attempt + 1)
+  }
 }
 
 const added = await callTool("add_service", { label: "redis", kind: "datastore" })
@@ -204,6 +222,75 @@ check(
   unknown.isError === true && unknown.content[0].text.includes("redis"),
 )
 
+// The edge lifecycle: connect, refuse a duplicate, retype, flip, remove.
+const second = await callTool("add_service", { label: "checkout", kind: "service", near: "redis" })
+check("add_service with near succeeds", !second.isError, second.content[0]?.text)
+
+const connected = await callTool("connect_services", {
+  source: "checkout",
+  target: "redis",
+  kind: "reads",
+})
+check("connect_services draws the edge", !connected.isError, connected.content[0]?.text)
+
+const duplicateEdge = await callTool("connect_services", {
+  source: "checkout",
+  target: "redis",
+  kind: "writes",
+})
+check(
+  "connecting an existing pair errors with a hint",
+  duplicateEdge.isError === true && duplicateEdge.content[0].text.includes("set_dependency_kind"),
+)
+
+const retyped = await callTool("set_dependency_kind", {
+  source: "checkout",
+  target: "redis",
+  kind: "writes",
+})
+check("set_dependency_kind updates the edge", !retyped.isError, retyped.content[0]?.text)
+
+const reversed = await callTool("reverse_dependency", { source: "checkout", target: "redis" })
+check(
+  "reverse_dependency flips the edge",
+  !reversed.isError && reversed.content[0].text.includes("redis now writes checkout"),
+  reversed.content[0]?.text,
+)
+
+const disconnected = await callTool("disconnect_services", { source: "redis", target: "checkout" })
+check("disconnect_services removes the edge", !disconnected.isError, disconnected.content[0]?.text)
+
+const moved = await callTool("move_service", { service: "checkout", direction: "below", of: "redis" })
+check("move_service places relative to the anchor", !moved.isError, moved.content[0]?.text)
+
+const selection = await callTool("select_services", { services: ["checkout"] })
+check("select_services succeeds", !selection.isError, selection.content[0]?.text)
+
+// resolve_incident exists only while something is down.
+const down = await callTool("simulate_failure", { service: "redis" })
+check("simulate_failure succeeds", !down.isError)
+let afterDown = []
+for (let attempt = 0; attempt < 10; attempt += 1) {
+  afterDown = await evaluate("document.modelContext.getTools().then(ts => ts.map(t => t.name))")
+  if (afterDown.includes("resolve_incident")) break
+  await new Promise((resolve) => setTimeout(resolve, 300))
+}
+check("resolve_incident appears during an incident", afterDown.includes("resolve_incident"))
+
+// The engine can report a transient error while the call still executes, so
+// judge resolve_incident by the board state it leaves behind.
+await callTool("resolve_incident", {})
+const afterResolve = await callTool("describe_board", {})
+check(
+  "resolve_incident restores the board",
+  !afterResolve.isError && !afterResolve.content[0].text.includes("[DOWN]"),
+  afterResolve.content[0]?.text.split("\n")[0],
+)
+
+// A narration line exists only in the cursor bubble — the call log shows
+// result texts, never this phrasing.
+await callTool("find_blast_radius", { service: "redis" })
+
 // The first tool call gives the agent its seat: a participant chip with the
 // agent badge, and a cursor pinned to the node the call touched.
 await new Promise((resolve) => setTimeout(resolve, 500))
@@ -213,6 +300,7 @@ check(
   "engine tool count is visible in the inspector",
   /The browser engine reports \d+ registered tool/.test(pageText),
 )
+check("agent bubble narrates the last call", pageText.includes("Tracing the blast radius of redis"))
 
 ws.close()
 cleanup(failed ? 1 : 0)

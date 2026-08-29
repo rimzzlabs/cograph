@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { BoardConnection } from "@/lib/yjs/board-connection"
+import type { AgentActivity } from "@/stores/agent-store"
 import type { Participant } from "@/stores/session-store"
 
 export interface PresenceState {
@@ -8,12 +9,16 @@ export interface PresenceState {
   cursor: { x: number; y: number } | null
   /** Unix time of the participant's last real input; null for old clients. */
   lastActiveAt: number | null
+  /** The agent's current bubble line; always null for humans. */
+  activity: AgentActivity | null
 }
 
 export interface AgentPresence {
   participant: Participant
   cursor: { x: number; y: number } | null
   lastActiveAt: number | null
+  activity: AgentActivity | null
+  selection: string[]
 }
 
 interface UsePresenceParams {
@@ -51,6 +56,8 @@ export function usePresence(params: UsePresenceParams) {
     awareness.setLocalStateField("agentParticipant", agent?.participant ?? null)
     awareness.setLocalStateField("agentCursor", agent?.cursor ?? null)
     awareness.setLocalStateField("agentLastActiveAt", agent?.lastActiveAt ?? null)
+    awareness.setLocalStateField("agentActivity", agent?.activity ?? null)
+    awareness.setLocalStateField("agentSelection", agent?.selection ?? [])
 
     function readOthers() {
       const newest = new Map<string, { state: PresenceState; lastUpdated: number }>()
@@ -68,6 +75,8 @@ export function usePresence(params: UsePresenceParams) {
           agentParticipant?: Participant | null
           agentCursor?: { x: number; y: number } | null
           agentLastActiveAt?: number | null
+          agentActivity?: AgentActivity | null
+          agentSelection?: string[]
         }
         const lastUpdated = awareness.meta.get(clientId)?.lastUpdated ?? 0
 
@@ -79,15 +88,17 @@ export function usePresence(params: UsePresenceParams) {
             selection: value.selection ?? [],
             cursor: value.cursor ?? null,
             lastActiveAt: value.lastActiveAt ?? null,
+            activity: null,
           })
         }
 
         if (value.agentParticipant && value.agentParticipant.id !== `${me.id}:agent`) {
           offer(value.agentParticipant.id, lastUpdated, {
             participant: value.agentParticipant,
-            selection: [],
+            selection: value.agentSelection ?? [],
             cursor: value.agentCursor ?? null,
             lastActiveAt: value.agentLastActiveAt ?? null,
+            activity: value.agentActivity ?? null,
           })
         }
       }

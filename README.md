@@ -1,6 +1,11 @@
-# Cograph
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="brand/cograph-horizontal.svg" />
+  <img src="brand/cograph-horizontal-light.svg" alt="Cograph" width="240" />
+</picture>
 
 A shared architecture graph where your agent has a cursor.
+
+**[cograph.rimzzlabs.com](https://cograph.rimzzlabs.com)**
 
 Cograph is a real-time collaborative board for system architecture and service dependencies. People
 and AI agents edit the same graph at the same time. An agent is a participant, not a chat box: it

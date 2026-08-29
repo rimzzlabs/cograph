@@ -612,10 +612,25 @@ third-party use of the SVG).
 
 ---
 
+## 028 — Move the canonical domain to cograph.rimzzlabs.com
+
+**Date:** 2026-08-29
+
+The app now answers on `cograph.rimzzlabs.com`. Entry 027 hardcoded the `workers.dev` host in three
+tags: `og:url`, `og:image`, and `twitter:image`. Those three now name the new host.
+
+The URLs must stay absolute. A social crawler does not resolve a relative path, so a relative
+`og:image` gives no card at all.
+
+The `workers.dev` host still answers. It is the same Worker, so both hosts serve the same
+application. The tags name one host, so a card is always built from the canonical domain.
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The
   challenge names ChatGPT's browser as a judging surface, and nothing here has touched it. The app
-  is deployed at https://cograph.rimzzlabs.workers.dev (2026-08-29), and the phone check is pending.
+  is deployed at https://cograph.rimzzlabs.com (2026-08-29), and the phone check is pending.
 - **The repository is private.** The submission needs a public repository with a license file at the
   root. Keep it private until near the deadline, then flip it.

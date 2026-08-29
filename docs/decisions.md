@@ -671,19 +671,19 @@ Dark stays the default. A pre-paint script in `index.html` reads `cograph:theme`
 flashes on load. The theme store owns the runtime side: the root class, the `theme-color` meta tag,
 and storage.
 
-The toggle sits in the top bar beside the participant stack. The icon is a lightbulb, not a sun and
-moon pair: in the dark the bulb offers to turn the lights on, and in the light it offers to turn
-them off. The button is icon-only, so it carries an `aria-label` that names the scheme it switches
-to.
+The toggle sits in the top bar beside the participant stack. The icon is one static contrast
+glyph, the pattern shadcn uses: the icon never swaps with the scheme. The button is icon-only, so
+it carries an `aria-label` that names the scheme a click switches to.
 
 **Accepted trade-off:** participant identity colours keep lightness 0.74 and chroma 0.15, which
 were tuned for the dark canvas. On the light canvas they read softer. The hue-spacing guarantee
 and `pnpm test:color` do not change, so identity stays stable across both schemes.
 
 **Rejected:** a system-preference default (the product identity is the dark canvas, and decision
-015 stands as the default); the sun and moon icon pair (generic, and the user vetoed it);
-persisting through the zustand persist middleware (the pre-paint script needs a plain string it
-can read in one line).
+015 stands as the default); the sun and moon icon pair (generic, and the user vetoed it); a
+lightbulb pair that swaps with the scheme (the user prefers one static glyph); persisting through
+the zustand persist middleware (the pre-paint script needs a plain string it can read in one
+line).
 
 ---
 

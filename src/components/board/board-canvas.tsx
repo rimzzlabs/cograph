@@ -13,7 +13,7 @@ import {
   useReactFlow,
 } from "@xyflow/react"
 import { BookOpen } from "lucide-react"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   BoardConnectDialog,
   type ConnectDialogResult,
@@ -75,6 +75,12 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   const cursorFrame = useRef<number | null>(null)
 
   const editable = canEdit(me.role)
+
+  // A selection made before the role turned viewer must not survive it: the
+  // ring promises an edit, and the agent's selection tools key on the store.
+  useEffect(() => {
+    if (!editable) setSelection({ nodes: [], edges: [] })
+  }, [editable, setSelection])
   const [menu, setMenu] = useState<ContextMenuState | null>(null)
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null)
   const [connectPair, setConnectPair] = useState<ConnectPair | null>(null)
@@ -146,7 +152,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
       let selection: string[] | null = null
 
       for (const change of changes) {
-        if (change.type === "position" && change.position) {
+        if (change.type === "position" && change.position && editable) {
           updateNode({
             board,
             id: change.id,
@@ -397,6 +403,13 @@ function BoardCanvasInner(props: BoardCanvasProps) {
         onNodeDoubleClick={(_, node) => {
           if (editable) setEditingNodeId(node.id)
         }}
+        // The viewer role must not move, connect, or select anything. Our
+        // handlers are gated by role, but React Flow's built-in interactions
+        // are not — these props close that gap. Selection is included: no
+        // read-only tool reads it, and its ring promises an edit.
+        nodesDraggable={editable}
+        nodesConnectable={editable}
+        elementsSelectable={editable}
         colorMode="dark"
         fitView
         panOnDrag={[1, 2]}

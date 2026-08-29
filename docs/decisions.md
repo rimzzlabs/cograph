@@ -560,6 +560,26 @@ announcing every awareness change (only graph deltas matter to a reader).
 
 ---
 
+## 026 — Close the viewer's drag gap
+
+**Date:** 2026-08-29
+
+A viewer opened the view-only link and dragged a node, and the move synced to everyone.
+
+The viewer role gated our own handlers: the toolbar, the context menu, keyboard deletion, and the
+agent tools. It did not gate React Flow's built-in interactions. `nodesDraggable` defaults to true,
+and the position handler in `onNodesChange` wrote to the document without a role check.
+
+`nodesDraggable`, `nodesConnectable`, and `elementsSelectable` now follow the role, so a viewer
+can not move a card, start a connection, or select anything. The position write also checks the
+role, as defence in depth. A selection made before the role turned viewer is cleared.
+
+The first version of this fix kept selection for viewers, with the argument that the read-only
+tools use it. That argument was wrong: no read-only tool reads the selection, and the selection
+ring promises an edit that the role forbids.
+
+---
+
 ## Open risks
 
 - **The ChatGPT in-app browser is untested.** Chrome is verified by `pnpm test:webmcp`. The

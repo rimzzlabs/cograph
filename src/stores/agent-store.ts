@@ -20,6 +20,13 @@ export interface AgentActivity {
 /** Awareness relays every line to every peer, so keep the payload small. */
 const MAX_ACTIVITY_LENGTH = 600
 
+/**
+ * A highlight is a spotlight, not state: it answers one question and then
+ * fades, so a blast radius computed minutes ago cannot keep the board orange.
+ * Incident tinting does not need this — it is derived from node status.
+ */
+const HIGHLIGHT_TTL_MS = 15_000
+
 interface AgentActivityState {
   /** True after the first tool call. The agent has no seat until it acts. */
   active: boolean
@@ -44,49 +51,65 @@ interface AgentActivityState {
 }
 
 const baseStore = create<AgentActivityState>()(
-  immer((set) => ({
-    active: false,
-    cursor: null,
-    activity: null,
-    selection: [],
-    highlight: [],
-    lastToolName: null,
-    lastActiveAt: null,
-    markToolCall: (params) =>
-      set((state) => {
-        state.active = true
-        state.lastToolName = params.tool
-        state.lastActiveAt = Date.now()
-        if (params.position) state.cursor = params.position
-      }),
-    moveCursor: (position) =>
-      set((state) => {
-        state.cursor = position
-      }),
-    announce: (params) =>
-      set((state) => {
-        const text = params.text.trim()
-        if (!text) return
-        state.activity = {
-          id: crypto.randomUUID(),
-          text: text.length > MAX_ACTIVITY_LENGTH ? `${text.slice(0, MAX_ACTIVITY_LENGTH)}…` : text,
-          tone: params.tone ?? "info",
-          at: Date.now(),
+  immer((set) => {
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null
+
+    return {
+      active: false,
+      cursor: null,
+      activity: null,
+      selection: [],
+      highlight: [],
+      lastToolName: null,
+      lastActiveAt: null,
+      markToolCall: (params) =>
+        set((state) => {
+          state.active = true
+          state.lastToolName = params.tool
+          state.lastActiveAt = Date.now()
+          if (params.position) state.cursor = params.position
+        }),
+      moveCursor: (position) =>
+        set((state) => {
+          state.cursor = position
+        }),
+      announce: (params) =>
+        set((state) => {
+          const text = params.text.trim()
+          if (!text) return
+          state.activity = {
+            id: crypto.randomUUID(),
+            text:
+              text.length > MAX_ACTIVITY_LENGTH ? `${text.slice(0, MAX_ACTIVITY_LENGTH)}…` : text,
+            tone: params.tone ?? "info",
+            at: Date.now(),
+          }
+          // A bubble needs an anchor. A tool that errors before it can point
+          // anywhere still deserves a visible line, so park the cursor at the
+          // board origin — the same spot an empty-board describe uses.
+          if (state.cursor === null) state.cursor = { x: 0, y: 0 }
+        }),
+      setSelection: (nodeIds) =>
+        set((state) => {
+          state.selection = nodeIds
+        }),
+      setHighlight: (nodeIds) => {
+        if (highlightTimer !== null) clearTimeout(highlightTimer)
+        highlightTimer = null
+        set((state) => {
+          state.highlight = nodeIds
+        })
+        if (nodeIds.length > 0) {
+          highlightTimer = setTimeout(() => {
+            highlightTimer = null
+            set((state) => {
+              state.highlight = []
+            })
+          }, HIGHLIGHT_TTL_MS)
         }
-        // A bubble needs an anchor. A tool that errors before it can point
-        // anywhere still deserves a visible line, so park the cursor at the
-        // board origin — the same spot an empty-board describe uses.
-        if (state.cursor === null) state.cursor = { x: 0, y: 0 }
-      }),
-    setSelection: (nodeIds) =>
-      set((state) => {
-        state.selection = nodeIds
-      }),
-    setHighlight: (nodeIds) =>
-      set((state) => {
-        state.highlight = nodeIds
-      }),
-  })),
+      },
+    }
+  }),
 )
 
 export const useAgentStore = createSelectors(baseStore)

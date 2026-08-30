@@ -18,6 +18,7 @@ function phrase(direction: PlacementDirection) {
 /** Tools that create, change, move, or remove service nodes. */
 export function useBoardServiceTools(context: BoardToolContext) {
   const { board, snapshot, me, editable, resolve, pointAgentAt, announce, unknownService } = context
+  const { setHighlight } = context
 
   useAgentTool(
     editable && board
@@ -246,6 +247,9 @@ export function useBoardServiceTools(context: BoardToolContext) {
 
             announce({ text: `Simulating a failure of ${node.data.label}…` })
             pointAgentAt(node)
+            // The incident owns the board's tint from here: node status drives
+            // it, so an earlier blast-radius spotlight must not mix into it.
+            setHighlight([])
             if (node.data.status !== "down") {
               updateNode({
                 board,
@@ -283,6 +287,9 @@ export function useBoardServiceTools(context: BoardToolContext) {
           inputSchema: { type: "object", properties: {}, additionalProperties: false },
           execute: () => {
             announce({ text: "Resolving the incident…" })
+            // The board must read healthy the moment it is restored — drop any
+            // leftover spotlight so no ring outlives the incident.
+            setHighlight([])
             const restored = downNodes.map((node) => node.data.label)
             const first = downNodes[0]
             if (first) pointAgentAt(first)

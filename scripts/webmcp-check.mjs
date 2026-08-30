@@ -299,7 +299,10 @@ await callTool("find_blast_radius", { service: "redis" })
 // agent badge, and a cursor pinned to the node the call touched.
 await new Promise((resolve) => setTimeout(resolve, 500))
 const pageText = await evaluate("document.body.innerText")
-check("agent appears in the participant list", pageText.includes("'s agent"))
+// This driven session is automation, so it holds a single agent seat: its own
+// cursor chip carries the agent mark, and no derived "'s agent" twin exists.
+check("the driven session presents as one agent seat", pageText.includes("⚙"))
+check("no derived agent twin for an agent seat", !pageText.includes("'s agent"))
 check(
   "engine tool count is visible in the inspector",
   /The browser engine reports \d+ registered tool/.test(pageText),

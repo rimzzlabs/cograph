@@ -50,7 +50,9 @@ export function usePresence(params: UsePresenceParams) {
     if (!board) return
 
     const { awareness } = board.provider
-    awareness.setLocalStateField("participant", me)
+    // An agent seat has no human in the session: it publishes itself only
+    // through the agent fields, so peers see one seat, not a phantom human.
+    awareness.setLocalStateField("participant", me.kind === "agent" ? null : me)
     awareness.setLocalStateField("selection", selection)
     awareness.setLocalStateField("lastActiveAt", lastActiveAt)
     awareness.setLocalStateField("agentParticipant", agent?.participant ?? null)

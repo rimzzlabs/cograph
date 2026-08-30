@@ -78,6 +78,7 @@ function RoomSession(props: { roomId: string }) {
   const me = useSessionStore((state) => state.me)
   const setName = useSessionStore((state) => state.setName)
   const setRole = useSessionStore((state) => state.setRole)
+  const setKind = useSessionStore((state) => state.setKind)
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
 
   // The role rides the URL: ?role=viewer opens the room read-only, and the
@@ -88,6 +89,19 @@ function RoomSession(props: { roomId: string }) {
     setRole(isViewerLink ? "viewer" : "editor")
   }, [isViewerLink, setRole])
 
+  // An automated browser has no human in it: the session itself is the agent,
+  // one seat, no derived "'s agent" twin. navigator.webdriver only turns true
+  // under --enable-automation (Puppeteer, Playwright); a raw CDP launch skips
+  // it, so headless is detected through the user agent as well. ?seat=agent
+  // and ?seat=human override both, for the cases detection cannot see, like an
+  // in-app agent browser a human watches.
+  const seatParam = searchParams.get("seat")
+  const automated = navigator.webdriver || navigator.userAgent.includes("Headless")
+  const isAgentSeat = seatParam === "agent" || (seatParam !== "human" && automated)
+  useEffect(() => {
+    setKind(isAgentSeat ? "agent" : "human")
+  }, [isAgentSeat, setKind])
+
   const agentActive = useAgentStore((state) => state.active)
   const agentCursor = useAgentStore((state) => state.cursor)
   const agentLastActiveAt = useAgentStore((state) => state.lastActiveAt)
@@ -96,23 +110,41 @@ function RoomSession(props: { roomId: string }) {
 
   const lastActiveAt = useLastActiveAt()
 
-  // The local agent earns its seat on the first tool call, and rides this
-  // client's awareness state so remote peers see it too. Kept in an explicit
-  // useMemo, not left to the compiler: this identity is the dependency that
-  // decides when usePresence re-publishes the awareness state.
-  const localAgent = useMemo<AgentPresence | null>(
-    () =>
-      agentActive
-        ? {
-            participant: agentIdentityFor(me),
-            cursor: agentCursor,
-            lastActiveAt: agentLastActiveAt,
-            activity: agentActivity,
-            selection: agentSelection,
-          }
-        : null,
-    [agentActive, agentCursor, agentLastActiveAt, agentActivity, agentSelection, me],
-  )
+  // On a human seat, the local agent earns its derived seat on the first tool
+  // call. On an agent seat, the session itself is the agent: the seat exists
+  // from the moment it joins, under its own name. Kept in an explicit useMemo,
+  // not left to the compiler: this identity is the dependency that decides
+  // when usePresence re-publishes the awareness state.
+  const isMeAgent = me.kind === "agent"
+  const localAgent = useMemo<AgentPresence | null>(() => {
+    if (isMeAgent) {
+      return {
+        participant: me,
+        cursor: agentCursor,
+        lastActiveAt: agentLastActiveAt ?? lastActiveAt,
+        activity: agentActivity,
+        selection: agentSelection,
+      }
+    }
+    return agentActive
+      ? {
+          participant: agentIdentityFor(me),
+          cursor: agentCursor,
+          lastActiveAt: agentLastActiveAt,
+          activity: agentActivity,
+          selection: agentSelection,
+        }
+      : null
+  }, [
+    isMeAgent,
+    agentActive,
+    agentCursor,
+    agentLastActiveAt,
+    agentActivity,
+    agentSelection,
+    me,
+    lastActiveAt,
+  ])
 
   const others = usePresence({
     board,
@@ -135,7 +167,11 @@ function RoomSession(props: { roomId: string }) {
       ]
     : others
 
-  const peers = roster.map((entry) => entry.participant)
+  // On an agent seat, the roster carries me under my own id. The member list
+  // and the colour resolver must not see the same identity twice, while the
+  // cursor layer keeps the full roster so the seat's own marker still renders.
+  const remoteEntries = roster.filter((entry) => entry.participant.id !== me.id)
+  const peers = remoteEntries.map((entry) => entry.participant)
   const colors = useParticipantColors({ me, peers })
 
   const participantNames = new Map(
@@ -216,7 +252,7 @@ function RoomSession(props: { roomId: string }) {
           <ParticipantList
             me={me}
             meLastActiveAt={lastActiveAt}
-            others={roster}
+            others={remoteEntries}
             colors={colors}
             status={status}
             onEditName={() => setNameDialogOpen(true)}

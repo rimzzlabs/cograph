@@ -29,6 +29,8 @@ interface AgentActivityState {
   activity: AgentActivity | null
   /** Node ids the agent has selected — presence only, never a tool gate. */
   selection: string[]
+  /** Node ids the agent has highlighted, e.g. a blast radius it computed. */
+  highlight: string[]
   lastToolName: string | null
   /** Unix time of the last tool call. The agent's activity signal. */
   lastActiveAt: number | null
@@ -38,6 +40,7 @@ interface AgentActivityState {
   /** Publish a narration line into the agent's cursor bubble. */
   announce: (params: { text: string; tone?: AgentActivityTone }) => void
   setSelection: (nodeIds: string[]) => void
+  setHighlight: (nodeIds: string[]) => void
 }
 
 const baseStore = create<AgentActivityState>()(
@@ -46,6 +49,7 @@ const baseStore = create<AgentActivityState>()(
     cursor: null,
     activity: null,
     selection: [],
+    highlight: [],
     lastToolName: null,
     lastActiveAt: null,
     markToolCall: (params) =>
@@ -77,6 +81,10 @@ const baseStore = create<AgentActivityState>()(
     setSelection: (nodeIds) =>
       set((state) => {
         state.selection = nodeIds
+      }),
+    setHighlight: (nodeIds) =>
+      set((state) => {
+        state.highlight = nodeIds
       }),
   })),
 )

@@ -11,6 +11,8 @@ export interface PresenceState {
   lastActiveAt: number | null
   /** The agent's current bubble line; always null for humans. */
   activity: AgentActivity | null
+  /** Nodes this agent has highlighted for the room; always empty for humans. */
+  highlight: string[]
 }
 
 export interface AgentPresence {
@@ -19,6 +21,7 @@ export interface AgentPresence {
   lastActiveAt: number | null
   activity: AgentActivity | null
   selection: string[]
+  highlight: string[]
 }
 
 interface UsePresenceParams {
@@ -60,6 +63,7 @@ export function usePresence(params: UsePresenceParams) {
     awareness.setLocalStateField("agentLastActiveAt", agent?.lastActiveAt ?? null)
     awareness.setLocalStateField("agentActivity", agent?.activity ?? null)
     awareness.setLocalStateField("agentSelection", agent?.selection ?? [])
+    awareness.setLocalStateField("agentHighlight", agent?.highlight ?? [])
 
     function readOthers() {
       const newest = new Map<string, { state: PresenceState; lastUpdated: number }>()
@@ -79,6 +83,7 @@ export function usePresence(params: UsePresenceParams) {
           agentLastActiveAt?: number | null
           agentActivity?: AgentActivity | null
           agentSelection?: string[]
+          agentHighlight?: string[]
         }
         const lastUpdated = awareness.meta.get(clientId)?.lastUpdated ?? 0
 
@@ -91,6 +96,7 @@ export function usePresence(params: UsePresenceParams) {
             cursor: value.cursor ?? null,
             lastActiveAt: value.lastActiveAt ?? null,
             activity: null,
+            highlight: [],
           })
         }
 
@@ -101,6 +107,7 @@ export function usePresence(params: UsePresenceParams) {
             cursor: value.agentCursor ?? null,
             lastActiveAt: value.agentLastActiveAt ?? null,
             activity: value.agentActivity ?? null,
+            highlight: value.agentHighlight ?? [],
           })
         }
       }

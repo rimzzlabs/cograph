@@ -107,6 +107,7 @@ function RoomSession(props: { roomId: string }) {
   const agentLastActiveAt = useAgentStore((state) => state.lastActiveAt)
   const agentActivity = useAgentStore((state) => state.activity)
   const agentSelection = useAgentStore((state) => state.selection)
+  const agentHighlight = useAgentStore((state) => state.highlight)
 
   const lastActiveAt = useLastActiveAt()
 
@@ -124,6 +125,7 @@ function RoomSession(props: { roomId: string }) {
         lastActiveAt: agentLastActiveAt ?? lastActiveAt,
         activity: agentActivity,
         selection: agentSelection,
+        highlight: agentHighlight,
       }
     }
     return agentActive
@@ -133,6 +135,7 @@ function RoomSession(props: { roomId: string }) {
           lastActiveAt: agentLastActiveAt,
           activity: agentActivity,
           selection: agentSelection,
+          highlight: agentHighlight,
         }
       : null
   }, [
@@ -142,6 +145,7 @@ function RoomSession(props: { roomId: string }) {
     agentLastActiveAt,
     agentActivity,
     agentSelection,
+    agentHighlight,
     me,
     lastActiveAt,
   ])
@@ -163,6 +167,7 @@ function RoomSession(props: { roomId: string }) {
           cursor: localAgent.cursor,
           lastActiveAt: localAgent.lastActiveAt,
           activity: localAgent.activity,
+          highlight: localAgent.highlight,
         },
       ]
     : others
@@ -213,6 +218,17 @@ function RoomSession(props: { roomId: string }) {
   const agentSelectedNodeIds = useMemo(
     () => (agentSelectedKey ? agentSelectedKey.split("\n") : []),
     [agentSelectedKey],
+  )
+
+  // Every agent's highlight, merged the same way — e.g. a blast radius one of
+  // them computed. Shared through awareness, so it clears when the agent leaves.
+  const agentHighlightedKey = roster
+    .filter((entry) => entry.participant.kind === "agent")
+    .flatMap((entry) => entry.highlight)
+    .join("\n")
+  const agentHighlightedNodeIds = useMemo(
+    () => (agentHighlightedKey ? agentHighlightedKey.split("\n") : []),
+    [agentHighlightedKey],
   )
 
   function onCursorMove(position: { x: number; y: number } | null) {
@@ -268,6 +284,7 @@ function RoomSession(props: { roomId: string }) {
               snapshot={snapshot}
               cursors={cursors}
               agentSelectedNodeIds={agentSelectedNodeIds}
+              agentHighlightedNodeIds={agentHighlightedNodeIds}
               onCursorMove={onCursorMove}
             />
           ) : (

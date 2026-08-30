@@ -49,6 +49,8 @@ interface BoardCanvasProps {
   cursors: CursorMarker[]
   /** Nodes any agent has selected — rendered as a dashed presence ring. */
   agentSelectedNodeIds: string[]
+  /** Nodes any agent has highlighted, e.g. a blast radius — tinted like impact. */
+  agentHighlightedNodeIds: string[]
   onCursorMove: (position: { x: number; y: number } | null) => void
 }
 
@@ -67,11 +69,11 @@ export function BoardCanvas(props: BoardCanvasProps) {
  * so there is exactly one source of truth.
  */
 function BoardCanvasInner(props: BoardCanvasProps) {
-  const { board, snapshot, cursors, agentSelectedNodeIds, onCursorMove } = props
+  const { board, snapshot, cursors, agentSelectedNodeIds, agentHighlightedNodeIds, onCursorMove } =
+    props
 
   const me = useSessionStore((state) => state.me)
   const theme = useThemeStore((state) => state.theme)
-  const highlightedNodeIds = useSessionStore((state) => state.highlightedNodeIds)
   const selectedNodeIds = useSessionStore((state) => state.selectedNodeIds)
   const selectedEdgeIds = useSessionStore((state) => state.selectedEdgeIds)
   const setSelection = useSessionStore((state) => state.setSelection)
@@ -147,7 +149,7 @@ function BoardCanvasInner(props: BoardCanvasProps) {
     selected: selectedNodeIds.includes(node.id),
     data: {
       ...node.data,
-      highlighted: highlightedNodeIds.includes(node.id) || impactedIds.has(node.id),
+      highlighted: agentHighlightedNodeIds.includes(node.id) || impactedIds.has(node.id),
       agentSelected: agentSelectedNodeIds.includes(node.id),
     },
   }))

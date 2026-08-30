@@ -26,6 +26,7 @@ export interface BoardToolContext {
   /** Publish a narration line into the agent's cursor bubble. */
   announce: (params: { text: string; tone?: AgentActivityTone }) => void
   unknownService: (name: unknown) => ToolResult
+  /** Highlight nodes for every participant; rides the agent's awareness state. */
   setHighlight: (nodeIds: string[]) => void
 }
 
@@ -39,7 +40,6 @@ export function useBoardTools(params: UseBoardToolsParams) {
   const { board, snapshot } = params
 
   const me = useSessionStore((state) => state.me)
-  const setHighlight = useSessionStore((state) => state.setHighlight)
 
   const ready = board !== null
   const editable = ready && canEdit(me.role)
@@ -66,7 +66,7 @@ export function useBoardTools(params: UseBoardToolsParams) {
         `No service named "${String(name)}". Known services: ${known || "(the board is empty)"}.`,
       )
     },
-    setHighlight,
+    setHighlight: (nodeIds) => useAgentStore.getState().setHighlight(nodeIds),
   }
 
   useBoardReadTools(context)

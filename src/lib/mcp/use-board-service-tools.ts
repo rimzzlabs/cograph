@@ -284,15 +284,21 @@ export function useBoardServiceTools(context: BoardToolContext) {
           execute: () => {
             announce({ text: "Resolving the incident…" })
             const restored = downNodes.map((node) => node.data.label)
-            for (const node of downNodes) {
-              updateNode({
-                board,
-                id: node.id,
-                patch: { data: { status: "ok", authorId: me.id } },
-              })
-            }
             const first = downNodes[0]
             if (first) pointAgentAt(first)
+            // Restoring the nodes empties downNodes, and the re-render then
+            // unregisters this very tool while its call is still in flight —
+            // the engine drops the result of a tool that no longer exists.
+            // One macrotask lets the result reach the caller first.
+            setTimeout(() => {
+              for (const node of downNodes) {
+                updateNode({
+                  board,
+                  id: node.id,
+                  patch: { data: { status: "ok", authorId: me.id } },
+                })
+              }
+            }, 0)
             return textResult(`Incident resolved. Restored: ${restored.join(", ")}.`)
           },
         }

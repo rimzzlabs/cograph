@@ -23,10 +23,7 @@ interface SessionState {
   me: Participant
   selectedNodeIds: string[]
   selectedEdgeIds: string[]
-  /** Nodes the agent has highlighted, e.g. a blast radius it just computed. */
-  highlightedNodeIds: string[]
   setSelection: (selection: { nodes: string[]; edges: string[] }) => void
-  setHighlight: (nodeIds: string[]) => void
   setRole: (role: Role) => void
   setName: (name: string) => void
   /** The seat kind is derived per session (automation detection or ?seat=), never persisted. */
@@ -54,7 +51,6 @@ const baseStore = create<SessionState>()(
       me: createLocalParticipant(),
       selectedNodeIds: [],
       selectedEdgeIds: [],
-      highlightedNodeIds: [],
       setSelection: (selection) =>
         set((state) => {
           // Idempotence breaks feedback loops: React Flow re-reports the
@@ -70,10 +66,6 @@ const baseStore = create<SessionState>()(
           }
           state.selectedNodeIds = selection.nodes
           state.selectedEdgeIds = selection.edges
-        }),
-      setHighlight: (nodeIds) =>
-        set((state) => {
-          state.highlightedNodeIds = nodeIds
         }),
       setRole: (role) =>
         set((state) => {

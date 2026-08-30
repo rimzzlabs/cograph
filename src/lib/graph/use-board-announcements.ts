@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
+import { useBoardSynced } from "@/lib/yjs/use-board"
 
 interface UseBoardAnnouncementsParams {
   board: BoardConnection | null
@@ -18,30 +19,8 @@ interface UseBoardAnnouncementsParams {
 export function useBoardAnnouncements(params: UseBoardAnnouncementsParams) {
   const { board, snapshot, names, meId } = params
   const [message, setMessage] = useState("")
-  const [ready, setReady] = useState(false)
+  const ready = useBoardSynced(board)
   const previous = useRef<BoardSnapshot | null>(null)
-
-  useEffect(() => {
-    if (!board) return
-    if (board.provider.synced) {
-      setReady(true)
-      return
-    }
-    function onSync(isSynced: boolean) {
-      if (isSynced) setReady(true)
-    }
-    // A connect that never succeeds emits no "disconnected" status — only
-    // "connection-error". Both mean the same here: stop waiting for a sync.
-    function onFailure() {
-      setReady(true)
-    }
-    board.provider.on("sync", onSync)
-    board.provider.on("connection-error", onFailure)
-    return () => {
-      board.provider.off("sync", onSync)
-      board.provider.off("connection-error", onFailure)
-    }
-  }, [board])
 
   useEffect(() => {
     const before = previous.current

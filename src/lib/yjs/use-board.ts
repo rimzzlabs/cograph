@@ -32,6 +32,45 @@ export function useBoardSnapshot(board: BoardConnection | null) {
   return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot)
 }
 
+/**
+ * True once the provider has finished its first sync, so the UI can tell a
+ * still-loading board from a truly empty one. A connection that fails also
+ * settles to true: the board still works locally, and waiting longer would
+ * hold the canvas hostage.
+ */
+export function useBoardSynced(board: BoardConnection | null) {
+  const [synced, setSynced] = useState(false)
+
+  useEffect(() => {
+    if (!board) {
+      setSynced(false)
+      return
+    }
+    if (board.provider.synced) {
+      setSynced(true)
+      return
+    }
+
+    setSynced(false)
+    function onSync(isSynced: boolean) {
+      if (isSynced) setSynced(true)
+    }
+    // A connect that never succeeds emits no "disconnected" status — only
+    // "connection-error". Both mean the same here: stop waiting for a sync.
+    function onFailure() {
+      setSynced(true)
+    }
+    board.provider.on("sync", onSync)
+    board.provider.on("connection-error", onFailure)
+    return () => {
+      board.provider.off("sync", onSync)
+      board.provider.off("connection-error", onFailure)
+    }
+  }, [board])
+
+  return synced
+}
+
 export function useConnectionStatus(board: BoardConnection | null) {
   const [status, setStatus] = useState<"connecting" | "connected" | "disconnected">("connecting")
 

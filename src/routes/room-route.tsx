@@ -4,6 +4,7 @@ import { Link, useParams, useSearchParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
 import type { CursorMarker } from "@/components/board/board-cursor-layer"
+import { BoardSyncSkeleton } from "@/components/board/board-sync-skeleton"
 import { BrandMark } from "@/components/brand-mark"
 import { ParticipantList } from "@/components/presence/participant-list"
 import { ParticipantNameDialog } from "@/components/presence/participant-name-dialog"
@@ -19,7 +20,12 @@ import { useLastActiveAt } from "@/lib/presence/use-last-active"
 import { type AgentPresence, publishCursor, usePresence } from "@/lib/presence/use-presence"
 import { roomExists } from "@/lib/rooms/api"
 import { cn } from "@/lib/utils"
-import { useBoardConnection, useBoardSnapshot, useConnectionStatus } from "@/lib/yjs/use-board"
+import {
+  useBoardConnection,
+  useBoardSnapshot,
+  useBoardSynced,
+  useConnectionStatus,
+} from "@/lib/yjs/use-board"
 import { agentIdentityFor, useAgentStore } from "@/stores/agent-store"
 import { useSessionStore } from "@/stores/session-store"
 
@@ -67,6 +73,7 @@ function RoomSession(props: { roomId: string }) {
   const board = useBoardConnection(roomId)
   const snapshot = useBoardSnapshot(board)
   const status = useConnectionStatus(board)
+  const synced = useBoardSynced(board)
 
   const me = useSessionStore((state) => state.me)
   const setName = useSessionStore((state) => state.setName)
@@ -219,7 +226,7 @@ function RoomSession(props: { roomId: string }) {
 
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1">
-          {board ? (
+          {board && synced ? (
             <BoardCanvas
               board={board}
               snapshot={snapshot}
@@ -228,7 +235,7 @@ function RoomSession(props: { roomId: string }) {
               onCursorMove={onCursorMove}
             />
           ) : (
-            <p className="p-4 text-ink-muted text-sm">Connecting to the board…</p>
+            <BoardSyncSkeleton />
           )}
         </main>
         <ToolInspector />

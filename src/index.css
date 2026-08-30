@@ -271,6 +271,39 @@
   box-shadow: 0 0 36px -8px color-mix(in oklab, var(--color-agent) 35%, transparent);
 }
 
+/* The same dotted ground React Flow paints, so the swap to the canvas is seamless. */
+.board-sync-ground {
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(var(--color-line) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+@keyframes board-sync-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+/* The delay keeps a fast sync from flashing a skeleton nobody needed. */
+.board-sync-appear {
+  opacity: 0;
+  animation: board-sync-appear 250ms ease-out 150ms forwards;
+}
+
+@keyframes board-sync-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.board-sync-pulse {
+  animation: board-sync-pulse 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-rise,
   .landing-agent-drift {
@@ -281,6 +314,11 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  /* The one-shot appear fade stays: it is the anti-flash guard, not motion. */
+  .board-sync-pulse {
+    animation: none;
   }
 }
 

@@ -13,7 +13,7 @@ import {
   useReactFlow,
 } from "@xyflow/react"
 import { BookOpen } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   BoardConnectDialog,
   type ConnectDialogResult,
@@ -21,7 +21,7 @@ import {
 } from "@/components/board/board-connect-dialog"
 import { Button } from "@/components/ui/button"
 import { findDependents } from "@/lib/graph/traversal"
-import type { GraphNode, ServiceKind, ServiceStatus } from "@/lib/graph/types"
+import type { ServiceKind, ServiceStatus } from "@/lib/graph/types"
 import type { BoardConnection, BoardSnapshot } from "@/lib/yjs/board-connection"
 import { seedExampleBoard } from "@/lib/yjs/example-board"
 import {
@@ -125,164 +125,138 @@ function BoardCanvasInner(props: BoardCanvasProps) {
   const [connectPair, setConnectPair] = useState<ConnectPair | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const editingNode = useMemo<GraphNode | null>(
-    () => snapshot.nodes.find((node) => node.id === editingNodeId) ?? null,
-    [snapshot.nodes, editingNodeId],
-  )
+  const editingNode = snapshot.nodes.find((node) => node.id === editingNodeId) ?? null
 
   // The impact of an outage is derived, never stored: every client walks the
   // dependents of each down service, so all peers see the same amber tint from
   // the shared status flags alone.
-  const impactedIds = useMemo(() => {
-    const impacted = new Set<string>()
-    for (const node of snapshot.nodes) {
-      if (node.data.status !== "down") continue
-      for (const id of findDependents(snapshot, node.id)) impacted.add(id)
-    }
-    return impacted
-  }, [snapshot])
+  const impactedIds = new Set<string>()
+  for (const node of snapshot.nodes) {
+    if (node.data.status !== "down") continue
+    for (const id of findDependents(snapshot, node.id)) impactedIds.add(id)
+  }
 
   // Selection is controlled from the session store, the same way Yjs owns the
   // graph. React Flow reports selection intents and this feeds them back, so a
   // pane click clears the ring, the store, and the agent tool surface together.
-  const nodes = useMemo<Node[]>(
-    () =>
-      snapshot.nodes.map((node) => ({
-        id: node.id,
-        type: "service",
-        position: node.position,
-        ariaLabel: `${node.data.label}, ${node.data.kind}`,
-        selected: selectedNodeIds.includes(node.id),
-        data: {
-          ...node.data,
-          highlighted: highlightedNodeIds.includes(node.id) || impactedIds.has(node.id),
-          agentSelected: agentSelectedNodeIds.includes(node.id),
-        },
-      })),
-    [snapshot.nodes, highlightedNodeIds, selectedNodeIds, impactedIds, agentSelectedNodeIds],
-  )
-
-  const nodeLabels = useMemo(
-    () => new Map(snapshot.nodes.map((node) => [node.id, node.data.label])),
-    [snapshot.nodes],
-  )
-
-  const edges = useMemo<Edge[]>(
-    () =>
-      snapshot.edges.map((edge) => ({
-        id: edge.id,
-        type: "floating",
-        source: edge.source,
-        target: edge.target,
-        label: edge.kind,
-        ariaLabel: `${nodeLabels.get(edge.source) ?? "a service"} ${edge.kind} ${
-          nodeLabels.get(edge.target) ?? "a service"
-        }`,
-        selected: selectedEdgeIds.includes(edge.id),
-        animated: edge.kind === "publishes",
-      })),
-    [snapshot.edges, nodeLabels, selectedEdgeIds],
-  )
-
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      // In a controlled flow, React Flow only *reports* select changes — the app
-      // must apply them, in the same tick, or the ring waits for the next
-      // unrelated re-render to flush through.
-      let selection: string[] | null = null
-
-      for (const change of changes) {
-        if (change.type === "position" && change.position && editable) {
-          updateNode({
-            board,
-            id: change.id,
-            patch: { position: change.position },
-          })
-        }
-        if (change.type === "remove" && editable) {
-          removeNode(board, change.id)
-        }
-        if (change.type === "select") {
-          selection ??= [...useSessionStore.getState().selectedNodeIds]
-          selection = change.selected
-            ? [...selection.filter((id) => id !== change.id), change.id]
-            : selection.filter((id) => id !== change.id)
-        }
-      }
-
-      if (selection) {
-        setSelection({ nodes: selection, edges: useSessionStore.getState().selectedEdgeIds })
-      }
+  const nodes: Node[] = snapshot.nodes.map((node) => ({
+    id: node.id,
+    type: "service",
+    position: node.position,
+    ariaLabel: `${node.data.label}, ${node.data.kind}`,
+    selected: selectedNodeIds.includes(node.id),
+    data: {
+      ...node.data,
+      highlighted: highlightedNodeIds.includes(node.id) || impactedIds.has(node.id),
+      agentSelected: agentSelectedNodeIds.includes(node.id),
     },
-    [board, editable, setSelection],
-  )
+  }))
 
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      let selection: string[] | null = null
+  const nodeLabels = new Map(snapshot.nodes.map((node) => [node.id, node.data.label]))
 
-      for (const change of changes) {
-        if (change.type === "remove" && editable) removeEdge(board, change.id)
-        if (change.type === "select") {
-          selection ??= [...useSessionStore.getState().selectedEdgeIds]
-          selection = change.selected
-            ? [...selection.filter((id) => id !== change.id), change.id]
-            : selection.filter((id) => id !== change.id)
-        }
+  const edges: Edge[] = snapshot.edges.map((edge) => ({
+    id: edge.id,
+    type: "floating",
+    source: edge.source,
+    target: edge.target,
+    label: edge.kind,
+    ariaLabel: `${nodeLabels.get(edge.source) ?? "a service"} ${edge.kind} ${
+      nodeLabels.get(edge.target) ?? "a service"
+    }`,
+    selected: selectedEdgeIds.includes(edge.id),
+    animated: edge.kind === "publishes",
+  }))
+
+  function onNodesChange(changes: NodeChange[]) {
+    // In a controlled flow, React Flow only *reports* select changes — the app
+    // must apply them, in the same tick, or the ring waits for the next
+    // unrelated re-render to flush through.
+    let selection: string[] | null = null
+
+    for (const change of changes) {
+      if (change.type === "position" && change.position && editable) {
+        updateNode({
+          board,
+          id: change.id,
+          patch: { position: change.position },
+        })
       }
-
-      if (selection) {
-        setSelection({ nodes: useSessionStore.getState().selectedNodeIds, edges: selection })
+      if (change.type === "remove" && editable) {
+        removeNode(board, change.id)
       }
-    },
-    [board, editable, setSelection],
-  )
+      if (change.type === "select") {
+        // Spelled out instead of ??=: the React Compiler does not support
+        // logical assignment yet, and a bailout here would cost the whole
+        // component its compilation.
+        if (selection === null) selection = [...useSessionStore.getState().selectedNodeIds]
+        selection = change.selected
+          ? [...selection.filter((id) => id !== change.id), change.id]
+          : selection.filter((id) => id !== change.id)
+      }
+    }
 
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      if (!editable || !connection.source || !connection.target) return
-      // connectNodes upserts the kind on an existing pair. A drag hardcodes
-      // "calls", so guard here — redrawing an edge must not downgrade it.
-      const exists = snapshot.edges.some(
-        (edge) => edge.source === connection.source && edge.target === connection.target,
-      )
-      if (exists) return
-      connectNodes({
-        board,
-        source: connection.source,
-        target: connection.target,
-        kind: "calls",
-      })
-    },
-    [board, editable, snapshot.edges],
-  )
+    if (selection) {
+      setSelection({ nodes: selection, edges: useSessionStore.getState().selectedEdgeIds })
+    }
+  }
 
-  const onPaneClick = useCallback(() => {
+  function onEdgesChange(changes: EdgeChange[]) {
+    let selection: string[] | null = null
+
+    for (const change of changes) {
+      if (change.type === "remove" && editable) removeEdge(board, change.id)
+      if (change.type === "select") {
+        if (selection === null) selection = [...useSessionStore.getState().selectedEdgeIds]
+        selection = change.selected
+          ? [...selection.filter((id) => id !== change.id), change.id]
+          : selection.filter((id) => id !== change.id)
+      }
+    }
+
+    if (selection) {
+      setSelection({ nodes: useSessionStore.getState().selectedNodeIds, edges: selection })
+    }
+  }
+
+  function onConnect(connection: Connection) {
+    if (!editable || !connection.source || !connection.target) return
+    // connectNodes upserts the kind on an existing pair. A drag hardcodes
+    // "calls", so guard here — redrawing an edge must not downgrade it.
+    const exists = snapshot.edges.some(
+      (edge) => edge.source === connection.source && edge.target === connection.target,
+    )
+    if (exists) return
+    connectNodes({
+      board,
+      source: connection.source,
+      target: connection.target,
+      kind: "calls",
+    })
+  }
+
+  function onPaneClick() {
     setSelection({ nodes: [], edges: [] })
-  }, [setSelection])
+  }
 
   // Mouse moves fire far faster than awareness needs; one publish per frame.
-  const onPointerMove = useCallback(
-    (event: React.PointerEvent) => {
-      if (cursorFrame.current !== null) return
-      const { clientX, clientY } = event
-      cursorFrame.current = requestAnimationFrame(() => {
-        cursorFrame.current = null
-        onCursorMove(screenToFlowPosition({ x: clientX, y: clientY }))
-      })
-    },
-    [onCursorMove, screenToFlowPosition],
-  )
+  function onPointerMove(event: React.PointerEvent) {
+    if (cursorFrame.current !== null) return
+    const { clientX, clientY } = event
+    cursorFrame.current = requestAnimationFrame(() => {
+      cursorFrame.current = null
+      onCursorMove(screenToFlowPosition({ x: clientX, y: clientY }))
+    })
+  }
 
   // The cursor stays published at its last position on purpose. A still peer
   // keeps a visible cursor; the idle window on the read side retires it after
   // IDLE_TIMEOUT_MS, and a closed tab drops its whole awareness state.
-  const onPointerLeave = useCallback(() => {
+  function onPointerLeave() {
     if (cursorFrame.current !== null) {
       cancelAnimationFrame(cursorFrame.current)
       cursorFrame.current = null
     }
-  }, [])
+  }
 
   function openPaneMenu(event: React.MouseEvent | MouseEvent) {
     event.preventDefault()

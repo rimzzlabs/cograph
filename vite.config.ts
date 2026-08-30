@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), cloudflare()],
+  plugins: [react({ compiler: true }), tailwindcss(), cloudflare()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

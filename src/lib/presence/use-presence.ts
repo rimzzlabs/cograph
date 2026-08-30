@@ -104,11 +104,13 @@ export function usePresence(params: UsePresenceParams) {
       }
 
       const collapsed = Array.from(newest.values(), (entry) => entry.state)
-      setOthers(
-        collapsed.toSorted((first, second) =>
-          first.participant.id.localeCompare(second.participant.id),
-        ),
+      const next = collapsed.toSorted((first, second) =>
+        first.participant.id.localeCompare(second.participant.id),
       )
+      // Awareness fires for our own publishes too — every local cursor frame
+      // lands here. Keep the state identity unless a peer actually changed,
+      // or the whole room re-renders once per pointer move.
+      setOthers((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next))
     }
 
     readOthers()

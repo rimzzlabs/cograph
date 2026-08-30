@@ -48,6 +48,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "oxc-transform-react": "^0.147.0",
     "prettier": "^3.9.6",
     "shadcn": "4.19.0",
     "tailwindcss": "^4.3.3",

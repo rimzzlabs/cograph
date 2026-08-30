@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useEffectEvent } from "react"
 import { useAgentStore } from "@/stores/agent-store"
 import { useToolRegistryStore } from "@/stores/tool-registry-store"
 import {
@@ -31,13 +31,10 @@ export interface AgentToolSpec {
  * should not exist for the agent, rather than exist and return an error.
  *
  * The registration effect is keyed on the declarative half of the spec only.
- * `execute` is read through a ref, so a new closure on every render does not
- * churn the agent's tool list.
+ * `execute` goes through an Effect Event, so a new closure on every render
+ * does not churn the agent's tool list, yet a call always runs the latest one.
  */
 export function useAgentTool(spec: AgentToolSpec | null) {
-  const specRef = useRef(spec)
-  specRef.current = spec
-
   const addTool = useToolRegistryStore((state) => state.addTool)
   const removeTool = useToolRegistryStore((state) => state.removeTool)
   const recordCall = useToolRegistryStore((state) => state.recordCall)
@@ -51,6 +48,16 @@ export function useAgentTool(spec: AgentToolSpec | null) {
         exposedTo: spec.exposedTo,
       })
     : null
+
+  // The engine holds one long-lived execute per registration, but the spec
+  // closes over fresh state on every render. The Effect Event bridges the
+  // two: stable identity for the engine, latest closure for the call.
+  const executeCurrent = useEffectEvent(
+    (args: Record<string, unknown>, options?: ToolExecuteOptions) => {
+      if (!spec) return errorResult("This tool is no longer available.")
+      return spec.execute(args, options)
+    },
+  )
 
   // Synchronising with the browser's model context — an external system, which
   // is the one case rule 16 leaves for useEffect.
@@ -77,10 +84,7 @@ export function useAgentTool(spec: AgentToolSpec | null) {
           inputSchema: declaration.inputSchema,
           annotations: declaration.annotations,
           execute: async (args, options) => {
-            const current = specRef.current
-            if (!current) return errorResult("This tool is no longer available.")
-
-            const result = await current.execute(args, options)
+            const result = await executeCurrent(args, options)
             // Every failure becomes a danger line in the agent's cursor
             // bubble, so a refused call is visible on the canvas, not only in
             // the inspector. Tools announce their own success lines.

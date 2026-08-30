@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { ToolInspector } from "@/components/agent/tool-inspector"
 import { BoardCanvas } from "@/components/board/board-canvas"
@@ -90,7 +90,9 @@ function RoomSession(props: { roomId: string }) {
   const lastActiveAt = useLastActiveAt()
 
   // The local agent earns its seat on the first tool call, and rides this
-  // client's awareness state so remote peers see it too.
+  // client's awareness state so remote peers see it too. Kept in an explicit
+  // useMemo, not left to the compiler: this identity is the dependency that
+  // decides when usePresence re-publishes the awareness state.
   const localAgent = useMemo<AgentPresence | null>(
     () =>
       agentActive
@@ -113,29 +115,24 @@ function RoomSession(props: { roomId: string }) {
     agent: localAgent,
   })
 
-  const roster = useMemo(
-    () =>
-      localAgent
-        ? [
-            ...others,
-            {
-              participant: localAgent.participant,
-              selection: localAgent.selection,
-              cursor: localAgent.cursor,
-              lastActiveAt: localAgent.lastActiveAt,
-              activity: localAgent.activity,
-            },
-          ]
-        : others,
-    [others, localAgent],
-  )
+  const roster = localAgent
+    ? [
+        ...others,
+        {
+          participant: localAgent.participant,
+          selection: localAgent.selection,
+          cursor: localAgent.cursor,
+          lastActiveAt: localAgent.lastActiveAt,
+          activity: localAgent.activity,
+        },
+      ]
+    : others
 
-  const peers = useMemo(() => roster.map((entry) => entry.participant), [roster])
+  const peers = roster.map((entry) => entry.participant)
   const colors = useParticipantColors({ me, peers })
 
-  const participantNames = useMemo(
-    () => new Map([me, ...peers].map((participant) => [participant.id, participant.name])),
-    [me, peers],
+  const participantNames = new Map(
+    [me, ...peers].map((participant) => [participant.id, participant.name]),
   )
   const announcement = useBoardAnnouncements({
     board,
@@ -148,35 +145,36 @@ function RoomSession(props: { roomId: string }) {
   // it, together with the online ring. The clock re-checks on an interval, so
   // cursors also expire while nothing else re-renders.
   const now = useNow(IDLE_RECHECK_INTERVAL_MS)
-  const cursors = useMemo<CursorMarker[]>(
-    () =>
-      roster
-        .filter((entry) => entry.cursor !== null && isOnline(entry.lastActiveAt, now))
-        .map((entry) => ({
-          id: entry.participant.id,
-          name: entry.participant.name,
-          kind: entry.participant.kind,
-          color: colors.get(entry.participant.id) ?? "oklch(0.74 0.15 240)",
-          cursor: entry.cursor as { x: number; y: number },
-          activity: entry.participant.kind === "agent" ? entry.activity : null,
-        })),
-    [roster, colors, now],
-  )
+  const cursors: CursorMarker[] = roster
+    .filter((entry) => entry.cursor !== null && isOnline(entry.lastActiveAt, now))
+    .map((entry) => ({
+      id: entry.participant.id,
+      name: entry.participant.name,
+      kind: entry.participant.kind,
+      color: colors.get(entry.participant.id) ?? "oklch(0.74 0.15 240)",
+      cursor: entry.cursor as { x: number; y: number },
+      activity: entry.participant.kind === "agent" ? entry.activity : null,
+    }))
 
   // Every agent's selection, merged. It renders as a dashed ring so peers can
-  // see what the agents are looking at — presence, never a tool gate.
+  // see what the agents are looking at — presence, never a tool gate. Keyed on
+  // content, not on roster identity: the roster changes on every remote cursor
+  // frame, and a fresh array here would rebuild every canvas node with it.
+  const agentSelectedKey = roster
+    .filter((entry) => entry.participant.kind === "agent")
+    .flatMap((entry) => entry.selection)
+    .join("\n")
+  // This useMemo stays under the compiler on purpose: it is keyed on the
+  // string's content, which converts the compiler's identity comparison into
+  // the value comparison it cannot do itself.
   const agentSelectedNodeIds = useMemo(
-    () =>
-      roster
-        .filter((entry) => entry.participant.kind === "agent")
-        .flatMap((entry) => entry.selection),
-    [roster],
+    () => (agentSelectedKey ? agentSelectedKey.split("\n") : []),
+    [agentSelectedKey],
   )
 
-  const onCursorMove = useCallback(
-    (position: { x: number; y: number } | null) => publishCursor(board, position),
-    [board],
-  )
+  function onCursorMove(position: { x: number; y: number } | null) {
+    publishCursor(board, position)
+  }
 
   const [nameDialogOpen, setNameDialogOpen] = useState(false)
 

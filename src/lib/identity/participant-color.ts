@@ -51,8 +51,8 @@ function wrapHue(hue: number) {
 interface ResolveHuesParams {
   me: ColoredParticipant
   peers: ColoredParticipant[]
-  /** Peer id to slot index, kept across renders so a peer keeps its colour. */
-  cache?: Map<string, number>
+  /** Peer id to slot index from the previous resolve, so a peer keeps its colour. */
+  cache?: ReadonlyMap<string, number>
 }
 
 /**
@@ -68,9 +68,14 @@ interface ResolveHuesParams {
  *
  * Peers are placed in participant-id order, so the assignment does not depend on
  * who joined first.
+ *
+ * Pure: the cache is only read. The caller keeps `slots` and feeds it back as
+ * the next cache. Resolving with the returned slots reproduces the same
+ * assignment, so the feedback loop is a fixed point.
  */
 export function resolveParticipantHues(params: ResolveHuesParams) {
   const { me, peers, cache } = params
+  const slots = new Map<string, number>()
 
   const nameCounts = new Map<string, number>()
   for (const participant of [me, ...peers]) {
@@ -108,10 +113,10 @@ export function resolveParticipantHues(params: ResolveHuesParams) {
     takenSlots.add(slot)
     hues.set(peer.id, hue)
     placed.push(hue)
-    cache?.set(peer.id, slot)
+    slots.set(peer.id, slot)
   }
 
-  return hues
+  return { hues, slots }
 }
 
 function slotFromHue(hue: number, anchor: number) {

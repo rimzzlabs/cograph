@@ -260,7 +260,11 @@ check(
 const disconnected = await callTool("disconnect_services", { source: "redis", target: "checkout" })
 check("disconnect_services removes the edge", !disconnected.isError, disconnected.content[0]?.text)
 
-const moved = await callTool("move_service", { service: "checkout", direction: "below", of: "redis" })
+const moved = await callTool("move_service", {
+  service: "checkout",
+  direction: "below",
+  of: "redis",
+})
 check("move_service places relative to the anchor", !moved.isError, moved.content[0]?.text)
 
 const selection = await callTool("select_services", { services: ["checkout"] })

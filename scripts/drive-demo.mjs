@@ -34,7 +34,8 @@ if (!CHROME && !process.env.ATTACH_PORT) {
 const ATTACH_PORT = process.env.ATTACH_PORT ? Number(process.env.ATTACH_PORT) : null
 const CDP_PORT = ATTACH_PORT ?? 9550 + (process.pid % 40)
 // DEMO_URL lets a rehearsal run against a local build before the live room.
-const URL_TO_OPEN = process.env.DEMO_URL ?? "https://cograph.rimzzlabs.com/r/demo"
+// seat=agent is explicit, though automation detection would resolve it anyway.
+const URL_TO_OPEN = process.env.DEMO_URL ?? "https://cograph.rimzzlabs.com/r/demo?seat=agent"
 const TARGET_HOST = new URL(URL_TO_OPEN).host
 const PAUSE_MS = process.env.PAUSE_MS ? Number(process.env.PAUSE_MS) : 3000
 

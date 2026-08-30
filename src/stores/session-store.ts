@@ -29,6 +29,8 @@ interface SessionState {
   setHighlight: (nodeIds: string[]) => void
   setRole: (role: Role) => void
   setName: (name: string) => void
+  /** The seat kind is derived per session (automation detection or ?seat=), never persisted. */
+  setKind: (kind: ParticipantKind) => void
 }
 
 export const IDENTITY_STORAGE_KEY = "cograph:identity"
@@ -80,6 +82,10 @@ const baseStore = create<SessionState>()(
       setName: (name) =>
         set((state) => {
           state.me.name = name
+        }),
+      setKind: (kind) =>
+        set((state) => {
+          state.me.kind = kind
         }),
     })),
     {

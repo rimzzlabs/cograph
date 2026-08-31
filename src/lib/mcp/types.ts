@@ -97,8 +97,24 @@ declare global {
   }
 }
 
+// Some embedded browsers (the ChatGPT desktop in-app browser, for one) ship a
+// `document.modelContext` that is not an EventTarget and lacks part of this
+// interface. Calling into that shape crashed the app on mount, so an object
+// counts as WebMCP only when every member we call is really a function.
+function isModelContext(value: unknown): value is ModelContext {
+  if (typeof value !== "object" || value === null) return false
+  const candidate = value as Partial<ModelContext>
+  return (
+    typeof candidate.registerTool === "function" &&
+    typeof candidate.getTools === "function" &&
+    typeof candidate.addEventListener === "function" &&
+    typeof candidate.removeEventListener === "function"
+  )
+}
+
 export function getModelContext() {
-  return typeof document === "undefined" ? undefined : document.modelContext
+  if (typeof document === "undefined") return undefined
+  return isModelContext(document.modelContext) ? document.modelContext : undefined
 }
 
 export function isWebMcpAvailable() {

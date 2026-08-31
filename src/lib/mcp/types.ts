@@ -80,15 +80,23 @@ export interface RegisteredTool {
   origin?: string
 }
 
-export interface ModelContext extends EventTarget {
+/**
+ * Only `registerTool` is universal. The ChatGPT desktop in-app browser ships a
+ * subset of WebMCP: `registerTool` exists, but the object is not an EventTarget
+ * and the other members can be absent. Every optional member must go through a
+ * function check at the call site.
+ */
+export interface ModelContext {
   registerTool: (tool: ToolDescriptor, options?: RegisterToolOptions) => Promise<void>
-  getTools: (options?: { fromOrigins?: string[] }) => Promise<RegisteredTool[]>
+  getTools?: (options?: { fromOrigins?: string[] }) => Promise<RegisteredTool[]>
   /** Args in and result out are JSON strings on the host side. */
-  executeTool: (
+  executeTool?: (
     tool: RegisteredTool,
     args: string,
     options?: { signal?: AbortSignal },
   ) => Promise<string>
+  addEventListener?: (type: "toolchange", listener: () => void) => void
+  removeEventListener?: (type: "toolchange", listener: () => void) => void
 }
 
 declare global {
@@ -97,19 +105,12 @@ declare global {
   }
 }
 
-// Some embedded browsers (the ChatGPT desktop in-app browser, for one) ship a
-// `document.modelContext` that is not an EventTarget and lacks part of this
-// interface. Calling into that shape crashed the app on mount, so an object
-// counts as WebMCP only when every member we call is really a function.
+// The feature check ChatGPT's site-tools docs prescribe: an object counts as
+// WebMCP when `registerTool` is a function, nothing more. Requiring the full
+// Chrome shape here made cograph invisible to subset implementations.
 function isModelContext(value: unknown): value is ModelContext {
   if (typeof value !== "object" || value === null) return false
-  const candidate = value as Partial<ModelContext>
-  return (
-    typeof candidate.registerTool === "function" &&
-    typeof candidate.getTools === "function" &&
-    typeof candidate.addEventListener === "function" &&
-    typeof candidate.removeEventListener === "function"
-  )
+  return typeof (value as Partial<ModelContext>).registerTool === "function"
 }
 
 export function getModelContext() {

@@ -14,20 +14,26 @@ function useEngineToolCount() {
 
   useEffect(() => {
     const modelContext = getModelContext()
-    if (!modelContext) return
+    // Subset implementations (the ChatGPT desktop in-app browser) ship
+    // registerTool without getTools or the toolchange event. The engine count
+    // is a nicety, so it simply stays hidden there.
+    if (!modelContext || typeof modelContext.getTools !== "function") return
 
     let cancelled = false
     const refresh = () => {
-      void modelContext.getTools().then((engineTools) => {
+      void modelContext.getTools?.().then((engineTools) => {
         if (!cancelled) setCount(engineTools.length)
       })
     }
 
     refresh()
-    modelContext.addEventListener("toolchange", refresh)
+    const canSubscribe =
+      typeof modelContext.addEventListener === "function" &&
+      typeof modelContext.removeEventListener === "function"
+    if (canSubscribe) modelContext.addEventListener?.("toolchange", refresh)
     return () => {
       cancelled = true
-      modelContext.removeEventListener("toolchange", refresh)
+      if (canSubscribe) modelContext.removeEventListener?.("toolchange", refresh)
     }
   }, [])
 

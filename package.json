@@ -18,7 +18,8 @@
     "lint:fix": "biome check --write .",
     "format": "prettier --write \"**/*.{md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{md,yml,yaml}\"",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "test:webmcp:subset": "node scripts/webmcp-subset-check.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

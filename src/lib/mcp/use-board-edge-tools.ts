@@ -63,6 +63,7 @@ export function useBoardEdgeTools(context: BoardToolContext) {
           name: "connect_services",
           description:
             "Draw a new dependency edge from one service to another. Fails if the pair is already connected — use set_dependency_kind to change an existing edge.",
+          annotations: { readOnlyHint: false },
           inputSchema: pairSchema({ kind: { type: "string", enum: [...EDGE_KINDS] } }),
           execute: (args) => {
             const pair = resolvePair(args)
@@ -93,7 +94,7 @@ export function useBoardEdgeTools(context: BoardToolContext) {
       ? {
           name: "set_dependency_kind",
           description: "Change the kind of an existing dependency edge between two services.",
-          annotations: { idempotentHint: true },
+          annotations: { readOnlyHint: false, idempotentHint: true },
           inputSchema: pairSchema({ kind: { type: "string", enum: [...EDGE_KINDS] } }),
           execute: (args) => {
             const pair = resolvePair(args)
@@ -125,6 +126,7 @@ export function useBoardEdgeTools(context: BoardToolContext) {
           name: "reverse_dependency",
           description:
             "Flip the direction of an existing dependency edge, keeping its kind. Name the pair in its current direction.",
+          annotations: { readOnlyHint: false },
           inputSchema: pairSchema(),
           execute: (args) => {
             const pair = resolvePair(args)
@@ -157,7 +159,7 @@ export function useBoardEdgeTools(context: BoardToolContext) {
       ? {
           name: "disconnect_services",
           description: "Remove the dependency edge between two services.",
-          annotations: { destructiveHint: true, idempotentHint: true },
+          annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
           inputSchema: pairSchema(),
           execute: (args) => {
             const pair = resolvePair(args)

@@ -26,6 +26,7 @@ export function useBoardServiceTools(context: BoardToolContext) {
           name: "add_service",
           description:
             "Add a new service node to the shared board, optionally placed next to an existing one.",
+          annotations: { readOnlyHint: false },
           inputSchema: {
             type: "object",
             properties: {
@@ -69,6 +70,7 @@ export function useBoardServiceTools(context: BoardToolContext) {
       ? {
           name: "update_service",
           description: "Rename, re-kind, or annotate the named service.",
+          annotations: { readOnlyHint: false },
           inputSchema: {
             type: "object",
             properties: {
@@ -116,7 +118,7 @@ export function useBoardServiceTools(context: BoardToolContext) {
       ? {
           name: "delete_service",
           description: "Remove the named service and every dependency edge touching it.",
-          annotations: { destructiveHint: true, idempotentHint: true },
+          annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
           inputSchema: {
             type: "object",
             properties: {
@@ -144,6 +146,7 @@ export function useBoardServiceTools(context: BoardToolContext) {
           name: "move_service",
           description:
             "Move a service next to another one. Positions are always relative — pick a direction and an anchor service.",
+          annotations: { readOnlyHint: false },
           inputSchema: {
             type: "object",
             properties: {
@@ -187,7 +190,8 @@ export function useBoardServiceTools(context: BoardToolContext) {
           name: "select_services",
           description:
             "Highlight services with the agent's own selection ring, so everyone sees what you are focused on. Pass an empty list to clear it. Selection is presence only — no other tool depends on it.",
-          annotations: { idempotentHint: true },
+          // Selection mutates shared presence state, so it is not read-only.
+          annotations: { readOnlyHint: false, idempotentHint: true },
           inputSchema: {
             type: "object",
             properties: {
@@ -232,7 +236,7 @@ export function useBoardServiceTools(context: BoardToolContext) {
           name: "simulate_failure",
           description:
             "Mark the named service as down. Everyone on the board sees the outage and its blast radius until resolve_incident restores it.",
-          annotations: { idempotentHint: true },
+          annotations: { readOnlyHint: false, idempotentHint: true },
           inputSchema: {
             type: "object",
             properties: {
@@ -283,7 +287,7 @@ export function useBoardServiceTools(context: BoardToolContext) {
       ? {
           name: "resolve_incident",
           description: "Restore every service that is marked down, and clear the incident.",
-          annotations: { idempotentHint: true },
+          annotations: { readOnlyHint: false, idempotentHint: true },
           inputSchema: { type: "object", properties: {}, additionalProperties: false },
           execute: () => {
             announce({ text: "Resolving the incident…" })
